@@ -158,9 +158,80 @@ export class EmitterConfig extends EmberApp {
           <div class="form-fields"><input type="number" name="elevation" step="any" value="${e.elevation}"></div>
         </div>
       </fieldset>
+      ${this._lightHtml(e, preset)}
       <footer class="ember-footer">
         <button type="button" data-action="delete" class="ember-danger"><i class="fa-solid fa-trash"></i> ${t("Config.Delete")}</button>
       </footer>`;
+  }
+
+  /** Section « Lumière » : lumière créée par Ember, lumière existante liée, ou aucune. */
+  _lightHtml(e, preset) {
+    const mode = e.light ?? "auto";
+    const hasLight = !!preset?.light;
+    const opt = (value, label) => `<option value="${value}" ${mode === value ? "selected" : ""}>${label}</option>`;
+    const size = canvas.dimensions?.size ?? 100;
+    const lights = (canvas.lighting?.placeables ?? [])
+      .map((l) => ({
+        id: l.document.id,
+        d: Math.hypot(l.document.x - e.x, l.document.y - e.y) / size,
+        dim: l.document.config?.dim ?? 0,
+        bright: l.document.config?.bright ?? 0
+      }))
+      .sort((a, b) => a.d - b.d);
+    const lightOptions = lights.length
+      ? lights
+          .map(
+            (l) =>
+              `<option value="${esc(l.id)}" ${e.lightLink === l.id ? "selected" : ""}>${t("Light.At", { d: l.d.toFixed(1) })} · ${l.bright}/${l.dim}</option>`
+          )
+          .join("")
+      : `<option value="">${t("Light.NoLights")}</option>`;
+
+    return `
+      <fieldset>
+        <legend>${t("Light.Title")}</legend>
+        <div class="form-group">
+          <label>${t("Light.Mode")}</label>
+          <div class="form-fields"><select name="light">
+            ${opt("auto", hasLight ? t("Light.Auto") : t("Light.AutoNone"))}
+            ${opt("linked", t("Light.Linked"))}
+            ${opt("off", t("Light.Off"))}
+          </select></div>
+        </div>
+        ${
+          mode === "linked"
+            ? `<div class="form-group">
+          <label>${t("Light.Link")}</label>
+          <div class="form-fields"><select name="lightLink">${
+            e.lightLink ? "" : `<option value="" selected>—</option>`
+          }${lightOptions}</select></div>
+          <p class="hint">${t("Light.LinkHint")}</p>
+        </div>`
+            : ""
+        }
+        ${
+          mode === "auto" && hasLight
+            ? `<div class="form-group">
+          <label>${t("Light.Vision")}</label>
+          <div class="form-fields"><input type="checkbox" name="lightVision" ${e.lightVision !== false ? "checked" : ""}></div>
+          <p class="hint">${t("Light.VisionHint")}</p>
+        </div>`
+            : ""
+        }
+        ${
+          mode !== "off" && (mode === "linked" || hasLight)
+            ? `<div class="form-group">
+          <label>${t("Light.Scale")}</label>
+          <div class="form-fields ember-range">
+            <input type="range" name="lightScale" min="0.25" max="3" step="0.05" value="${e.lightScale ?? 1}">
+            <output>${e.lightScale ?? 1}×</output>
+          </div>
+        </div>
+        <p class="hint"><i class="fa-solid fa-lightbulb"></i> ${t("Light.Follows")}</p>`
+            : ""
+        }
+        ${game.settings.get(MODULE_ID, "engine") === "core" && mode !== "off" ? `<p class="hint">${t("Light.EmberOnly")}</p>` : ""}
+      </fieldset>`;
   }
 
   _onRender(context, options) {
@@ -192,6 +263,10 @@ export class EmitterConfig extends EmberApp {
       windFactor: Number(data.windFactor),
       blowout: data.blowout === undefined ? current.blowout : !!data.blowout,
       elevation: Number(data.elevation) || 0,
+      light: data.light ?? current.light,
+      lightLink: data.light === "linked" ? data.lightLink || current.lightLink || null : current.lightLink,
+      lightScale: data.lightScale === undefined ? current.lightScale : Number(data.lightScale),
+      lightVision: data.lightVision === undefined ? current.lightVision : !!data.lightVision,
       color: colorInput?.hasAttribute("data-unset") ? null : data.color
     };
     // Le rayon n'est mémorisé que s'il diffère de celui du preset.

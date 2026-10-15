@@ -106,6 +106,23 @@
       "leaves": "arrache bien plus de feuilles",
       "dust": "soulève la poussière",
       "candle": "vacille, s'éteint dans un courant d'air et se rallume quand il retombe"
+    },
+    "Light": {
+      "Title": "Lumière",
+      "Mode": "Source",
+      "Auto": "Lumière d'Ember (adaptée à l'effet)",
+      "AutoNone": "Lumière d'Ember (cet effet n'éclaire pas)",
+      "Linked": "Lier une lumière de la scène",
+      "Off": "Aucune lumière",
+      "Link": "Lumière liée",
+      "At": "À {d} case(s)",
+      "NoLights": "Aucune lumière sur la scène",
+      "LinkHint": "Classées de la plus proche à la plus éloignée de l'émetteur, avec leurs rayons vive/faible. Elle s'éteint, vacille et s'attise avec la flamme ; son document n'est jamais modifié.",
+      "Vision": "Éclaire vraiment",
+      "VisionHint": "Coché : vraie lumière Foundry, qui compte pour la vision (une flamme soufflée plonge la zone dans le noir). Décoché : simple lueur visuelle, sans effet sur ce que voient les tokens.",
+      "Scale": "Portée",
+      "Follows": "La lumière suit la flamme : éteinte quand elle est soufflée, plus forte quand le vent l'attise, en creux quand elle vacille.",
+      "EmberOnly": "La lumière adaptative ne fonctionne qu'avec le moteur Ember (réglages du module)."
     }
   }
 }

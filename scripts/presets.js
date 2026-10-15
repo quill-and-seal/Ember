@@ -35,6 +35,9 @@
  *   blowout     Flamme fragile : { threshold, relightDelay }. Elle vacille quand le courant d'air
  *               approche du seuil (100 = vent fort), s'éteint au-delà dans une bouffée de fumée
  *               et se rallume après relightDelay ms d'accalmie.
+ *   light       Lumière émise : { bright, dim } en cases, color, alpha (intensité 0..1),
+ *               animation Foundry { type, speed, intensity }. Elle suit la flamme : éteinte
+ *               quand la flamme est soufflée, plus forte quand le vent l'attise.
  *   drag        Frottement par seconde (0 = aucun)
  *
  *   En hauteur (moteur maison uniquement) :
@@ -47,6 +50,7 @@
 export const PRESETS = {
   campfire: {
     icon: "fa-solid fa-fire",
+    light: { bright: 4, dim: 8, color: "#ff9a3c", alpha: 0.5, animation: { type: "torch", speed: 3, intensity: 4 } },
     windFactor: 0.35,
     windEffects: { rate: 1.8, count: 1.7, scale: 1.35, alpha: 1.15, lift: 1.4 },
     textures: ["flame", "glow"],
@@ -67,6 +71,7 @@ export const PRESETS = {
 
   torch: {
     icon: "fa-solid fa-fire-flame-simple",
+    light: { bright: 4, dim: 8, color: "#ffb347", alpha: 0.45, animation: { type: "torch", speed: 4, intensity: 3 } },
     windFactor: 0.3,
     windEffects: { rate: 1.4, count: 1.3, scale: 1.2, life: 0.85 },
     blowout: { threshold: 1.15, relightDelay: 4000 },
@@ -88,6 +93,7 @@ export const PRESETS = {
 
   candle: {
     icon: "fa-solid fa-candle-holder",
+    light: { bright: 1, dim: 2, color: "#ffcf80", alpha: 0.4, animation: { type: "flame", speed: 2, intensity: 2 } },
     windFactor: 0.25,
     windEffects: { scale: 0.9, life: 0.9 },
     blowout: { threshold: 0.35, relightDelay: 3000 },
@@ -130,6 +136,7 @@ export const PRESETS = {
 
   embers: {
     icon: "fa-solid fa-fire-flame-curved",
+    light: { bright: 0, dim: 1.5, color: "#ff6a1a", alpha: 0.25 },
     windFactor: 0.8,
     windEffects: { rate: 2.5, count: 2.2, lift: 1.3 },
     textures: ["ember"],
@@ -195,6 +202,7 @@ export const PRESETS = {
 
   arcane: {
     icon: "fa-solid fa-wand-sparkles",
+    light: { bright: 1, dim: 3, color: "#9b6bff", alpha: 0.45, animation: { type: "pulse", speed: 2, intensity: 3 } },
     windFactor: 0,
     textures: ["star", "glow"],
     area: { shape: "ring", inner: 0.3, outer: 0.5 },
@@ -214,6 +222,7 @@ export const PRESETS = {
 
   holy: {
     icon: "fa-solid fa-sun",
+    light: { bright: 2, dim: 4, color: "#ffd76a", alpha: 0.45 },
     windFactor: 0.15,
     textures: ["glow", "star"],
     area: { shape: "circle", radius: 0.35 },

@@ -20,6 +20,12 @@
  *   - blowout   flamme fragile { threshold, relightDelay } : elle vacille quand le courant d'air
  *               approche du seuil, s'éteint au-delà (callback onExtinguish, pour une bouffée de
  *               fumée) et se rallume après relightDelay ms de calme relatif (onRelight).
+ *
+ * Lumière : le moteur calcule à chaque image un niveau de lumière (getLight()) qui suit la
+ * flamme : 0 quand elle est soufflée, plus fort quand le vent l'attise, en creux quand elle
+ * vacille. Les lumières de Foundry s'en servent. Avec l'option
+ *   - glow      { radius (px), color, alpha, texture }
+ * le moteur dessine lui-même une lueur au sol (purement visuelle, sans effet sur la vision).
  *   - drag      frottement (par seconde) qui freine l'élan, dans le plan et en hauteur
  *   - drift     dérive aléatoire ondulante
  * En hauteur :
@@ -73,6 +79,10 @@ export class EmberParticleSystem {
     this.lit = true;
     this._calmMs = 0;
     this._flicker = 0;
+
+    /** Niveau de lumière lissé : intensité (0 = éteint, 1 = normal) et facteur de rayon. */
+    this._light = { level: 1, radius: 1 };
+    this._glow = null;
     this.ticker = ticker ?? globalThis.PIXI?.Ticker?.shared ?? null;
 
     /** Zone d'apparition, relue à chaque particule : on peut la déplacer en direct. */
@@ -154,6 +164,43 @@ export class EmberParticleSystem {
     }
   }
 
+  /**
+   * Niveau de lumière actuel, pour une lumière liée à cet effet.
+   * @returns {{level: number, radius: number, lit: boolean, flicker: number}}
+   */
+  getLight() {
+    return { ...this._light, lit: this.lit, flicker: this._flicker };
+  }
+
+  /** Fait évoluer le niveau de lumière vers sa cible (fondu rapide à l'extinction, plus lent à l'allumage). */
+  _updateLight(react, flickerAlpha, ms) {
+    const dt = ms / 1000;
+    const stoke = Math.sqrt(Math.max(0.05, react.scale * react.alpha * Math.sqrt(react.rate)));
+    const targetLevel = this.lit ? Math.min(1.8, stoke) * flickerAlpha : 0;
+    const targetRadius = this.lit ? Math.min(1.4, Math.sqrt(react.scale)) : 0.6;
+    const kLevel = targetLevel < this._light.level ? 12 : 2.5;
+    this._light.level += (targetLevel - this._light.level) * Math.min(1, dt * kLevel);
+    this._light.radius += (targetRadius - this._light.radius) * Math.min(1, dt * 1.5);
+
+    // Lueur dessinée par le moteur (option glow)
+    const glow = this.config.glow;
+    if (!glow) return;
+    if (!this._glow) {
+      this._glow = new PIXI.Sprite(glow.texture ?? PIXI.Texture.WHITE);
+      this._glow.anchor.set(0.5, 0.5);
+      const modes = globalThis.PIXI?.BLEND_MODES;
+      this._glow.blendMode = modes ? modes.ADD : "add";
+      this.container.addChildAt?.(this._glow, 0) ?? this.container.addChild(this._glow);
+    }
+    const { x, y } = this.center;
+    const r = glow.radius * this._light.radius;
+    const texSize = this._glow.texture?.width || 64;
+    this._glow.position?.set?.(x, y);
+    this._glow.scale.set((r * 2) / texSize, (r * 2) / texSize);
+    this._glow.tint = glow.color ?? 0xffc070;
+    this._glow.alpha = Math.min(1, (glow.alpha ?? 0.5) * this._light.level);
+  }
+
   /** Particules vivantes. */
   get liveCount() {
     return this.particles.length;
@@ -219,6 +266,7 @@ export class EmberParticleSystem {
     const f = this._flicker;
     const flickerAlpha = f ? 1 - 0.55 * f * this.random() : 1;
     const flickerScale = f ? 1 - 0.25 * f * this.random() : 1;
+    this._updateLight(react, flickerAlpha, ms);
 
     // Apparitions (une flamme soufflée ne produit plus rien)
     if (!this._stopped && this.lit) {

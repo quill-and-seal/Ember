@@ -67,7 +67,7 @@ function rebuild() {
   system?.stop({ hard: true });
   container = new PIXI.Container();
   app.stage.addChildAt(container, 1);
-  const cfg = finalizeConfig(buildConfig(state, PRESETS[state.preset], { gridPx: GRID, wind }), getParticleTexture);
+  const cfg = finalizeConfig(buildConfig(state, PRESETS[state.preset], { gridPx: GRID, wind, glow: true }), getParticleTexture);
   system = new EmberParticleSystem(cfg, {
     container,
     ticker: app.ticker,
@@ -222,6 +222,8 @@ app.view.addEventListener("pointerup", () => (dragging = false));
 // Compteur de particules vivantes et intensité ressentie (rafales comprises)
 setInterval(() => {
   document.getElementById("stat-live").textContent = system?.liveCount ?? 0;
+  const light = system?.config.glow ? system.getLight() : null;
+  document.getElementById("stat-light").textContent = light ? `${Math.round(light.level * 100)} %` : "aucune";
   const r = system?._react;
   const flame = system?.config.blowout
     ? system.lit

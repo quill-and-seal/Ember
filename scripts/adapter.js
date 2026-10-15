@@ -138,6 +138,61 @@ export function computeWind(emitter, preset, sceneWind, { gridPx = REFERENCE_GRI
 }
 
 /* -------------------------------------------- */
+/*  Lumière liée                                */
+/* -------------------------------------------- */
+
+/**
+ * Lumière de base d'un émetteur, avant modulation par la flamme.
+ * @returns {null | {mode: "auto"|"linked", dim: number, bright: number, color: number, alpha: number,
+ *                   animation: object|null, vision: boolean, scale: number, linkId: string|null}}
+ *          dim et bright en cases (null pour une lumière liée : on garde les siennes).
+ */
+export function lightConfig(emitter, preset) {
+  const mode = emitter.light ?? "auto";
+  if (mode === "off") return null;
+  const scale = emitter.lightScale ?? 1;
+  if (mode === "linked") {
+    if (!emitter.lightLink) return null;
+    return { mode, linkId: emitter.lightLink, dim: null, bright: null, color: null, alpha: null, animation: null, vision: true, scale };
+  }
+  const base = preset?.light;
+  if (!base) return null;
+  const color = hexToNumber(emitter.color) ?? hexToNumber(base.color) ?? 0xffc070;
+  return {
+    mode: "auto",
+    linkId: null,
+    dim: base.dim ?? 0,
+    bright: base.bright ?? 0,
+    color,
+    alpha: base.alpha ?? 0.5,
+    animation: base.animation ?? null,
+    vision: emitter.lightVision !== false,
+    scale
+  };
+}
+
+/**
+ * Lumière modulée par l'état de la flamme (niveau et rayon donnés par le moteur).
+ * Renvoie des valeurs en cases et une intensité, ou disabled quand la flamme est soufflée.
+ */
+export function modulateLight(base, { level = 1, radius = 1, flicker = 0 } = {}, linkedBase = null) {
+  const src = linkedBase ?? base;
+  const k = (base.scale ?? 1) * radius;
+  const disabled = level < 0.03;
+  const animation = base.animation
+    ? { ...base.animation, intensity: Math.min(10, (base.animation.intensity ?? 5) + Math.round(flicker * 4)) }
+    : null;
+  return {
+    dim: (src.dim ?? 0) * k,
+    bright: (src.bright ?? 0) * k,
+    alpha: Math.min(1, (src.alpha ?? 0.5) * Math.min(1.6, level)),
+    color: base.color ?? src.color ?? null,
+    animation: linkedBase ? null : animation,
+    disabled
+  };
+}
+
+/* -------------------------------------------- */
 /*  Configuration complète                      */
 /* -------------------------------------------- */
 
@@ -147,9 +202,10 @@ export function computeWind(emitter, preset, sceneWind, { gridPx = REFERENCE_GRI
  *
  * @param {object} emitter   Données de l'émetteur (voir EMITTER_DEFAULTS)
  * @param {object} preset    Définition du preset
- * @param {object} context   { gridPx, performance, wind } (wind : vent de scène)
+ * @param {object} context   { gridPx, performance, wind, glow } (wind : vent de scène ;
+ *                           glow : forcer la lueur dessinée par le moteur, pour l'aperçu)
  */
-export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performance = 1, wind = null } = {}) {
+export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performance = 1, wind = null, glow = false } = {}) {
   const g = gridPx / REFERENCE_GRID;
   const size = emitter.size ?? 1;
   const speed = emitter.speed ?? 1;
@@ -190,6 +246,7 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     windEffects: preset.windEffects ?? null,
     // Flamme fragile, sauf si le MJ a désactivé l'extinction sur cet émetteur
     blowout: preset.blowout && emitter.blowout !== false ? { ...preset.blowout } : null,
+    glow: buildGlow(emitter, preset, gridPx, glow),
     drag: (preset.drag ?? 0) * speed,
     height: scaleRange(preset.height ?? [0, 0], g),
     lift: scaleRange(preset.lift ?? [0, 0], g * speed),
@@ -207,9 +264,20 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
   };
 }
 
+/**
+ * Lueur dessinée par le moteur : quand le MJ a choisi une lumière purement visuelle
+ * (sans effet sur la vision), ou toujours dans l'aperçu (force = true).
+ */
+function buildGlow(emitter, preset, gridPx, force) {
+  const light = lightConfig({ ...emitter, light: emitter.light === "linked" ? "off" : emitter.light }, preset);
+  if (!light || (!force && light.vision)) return null;
+  const cells = light.bright + (light.dim - light.bright) * 0.5;
+  return { radius: Math.max(0.5, cells) * gridPx * light.scale, color: light.color, alpha: Math.min(0.6, light.alpha + 0.1), _texture: "light" };
+}
+
 /** Clés comprises uniquement par le moteur maison. */
 const EMBER_ONLY_KEYS = [
-  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "drag", "height", "lift", "fall",
+  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "glow", "drag", "height", "lift", "fall",
   "groundFade", "perspective", "gravity", "prewarm", "gridScale"
 ];
 
@@ -220,6 +288,10 @@ export function finalizeConfig(cfg, getTexture) {
   const name = ["add", "screen", "normal"].includes(_blend) ? _blend : "normal";
   rest.blend = modes ? modes[name.toUpperCase()] ?? modes.NORMAL : name;
   rest.textures = _textures.map((id) => getTexture(id));
+  if (rest.glow) {
+    const { _texture, ...glow } = rest.glow;
+    rest.glow = { ...glow, texture: getTexture(_texture) };
+  }
   return rest;
 }
 

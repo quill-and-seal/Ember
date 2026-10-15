@@ -167,6 +167,9 @@ Hooks.on("canvasReady", () => {
 
 Hooks.on("canvasTearDown", () => manager.clear());
 
+// Foundry réinitialise ses lumières (mur modifié, lumière ajoutée…) : on remet les nôtres.
+Hooks.on("initializeLightSources", () => manager.lights.onInitializeLightSources());
+
 Hooks.on("updateScene", (scene, changes) => {
   if (scene.id !== canvas.scene?.id) return;
   const flagChanged = foundry.utils.hasProperty(changes, `flags.${MODULE_ID}`) || foundry.utils.hasProperty(changes, `flags.-=${MODULE_ID}`);

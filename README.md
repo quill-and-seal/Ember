@@ -41,6 +41,16 @@ L'outil **Vent de la scène** règle un vent qui pousse tous les effets de la sc
 
 Chaque émetteur a un curseur « Sensibilité au vent » (0 = abrité, ni déplacé ni attisé). Avec le moteur maison, tout change en direct, sans relancer les effets ; le générateur de Foundry fige la réaction au moment où l'effet est créé.
 
+### Lumière adaptative (moteur Ember)
+
+Les effets qui éclairent (feu de camp, torche, bougie, braises, aura arcanique, lumière sacrée) portent une lumière qui **suit la flamme** : elle s'éteint quand le vent la souffle, éclaire plus fort quand il l'attise, baisse par à-coups quand elle vacille, et prend la couleur imposée à l'émetteur. Dans la section **Lumière** des réglages d'un émetteur :
+
+- **Lumière d'Ember** : une lumière créée automatiquement, avec une portée adaptée à l'effet (torche : 4 cases de lumière vive, 8 de faible). La case **« Éclaire vraiment »** en fait une vraie lumière Foundry qui compte pour la vision (une torche soufflée plonge la zone dans le noir) ; décochée, c'est une simple lueur visuelle.
+- **Lier une lumière de la scène** : une lumière déjà posée, choisie dans une liste triée par distance, qui s'éteint, vacille et s'attise avec la flamme.
+- **Portée** : multiplie le rayon de la lumière.
+
+Rien n'est écrit en base de données : chaque joueur calcule la lumière de son côté, en phase grâce à l'heure du serveur, et une lumière liée garde son document intact.
+
 L'outil **Émetteurs de la scène** liste tous les émetteurs : centrer la vue, activer/désactiver, régler, supprimer.
 
 Chaque joueur peut réduire la quantité de particules dans les **réglages du module** (« Qualité des particules ») si sa machine peine.

@@ -106,6 +106,23 @@
       "leaves": "tears off many more leaves",
       "dust": "stirs up dust",
       "candle": "flickers, goes out in a draft and relights when it dies down"
+    },
+    "Light": {
+      "Title": "Light",
+      "Mode": "Source",
+      "Auto": "Ember light (matched to the effect)",
+      "AutoNone": "Ember light (this effect gives no light)",
+      "Linked": "Link a scene light",
+      "Off": "No light",
+      "Link": "Linked light",
+      "At": "{d} cell(s) away",
+      "NoLights": "No lights on this scene",
+      "LinkHint": "Sorted from nearest to farthest from the emitter, with bright/dim radii. It goes out, flickers and flares with the flame; its document is never changed.",
+      "Vision": "Real light",
+      "VisionHint": "Checked: a real Foundry light that counts for vision (a blown-out flame plunges the area into darkness). Unchecked: a visual glow only, with no effect on what tokens see.",
+      "Scale": "Range",
+      "Follows": "The light follows the flame: off when blown out, stronger when the wind stokes it, dipping when it flickers.",
+      "EmberOnly": "Adaptive light only works with the Ember engine (module settings)."
     }
   }
 }

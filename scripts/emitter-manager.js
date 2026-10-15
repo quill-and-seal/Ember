@@ -15,12 +15,16 @@ import { getParticleTexture } from "./textures.js";
 import { EmberParticleSystem } from "./engine/particle-system.js";
 import { createSceneContainer, canvasTicker } from "./engine/placement.js";
 import { spawnPuff } from "./engine/puff.js";
+import { LightController } from "./light-controller.js";
 
 export class EmitterManager {
   /** @type {Map<string, {generator: object, signature: string}>} */
   #active = new Map();
 
   #warnedMissingApi = false;
+
+  /** Lumières liées aux émetteurs (moteur maison uniquement). */
+  lights = new LightController();
 
   /* -------------------------------------------- */
   /*  Lecture                                     */
@@ -131,7 +135,9 @@ export class EmitterManager {
    * Le générateur de Foundry intègre le vent à ses vitesses : il faut le recréer.
    */
   #signature(emitter) {
-    const { label, id, ...rest } = emitter;
+    // Les réglages de lumière n'imposent de recréer l'effet que pour la lueur dessinée par le moteur.
+    const { label, id, light, lightLink, lightScale, lightVision, ...rest } = emitter;
+    if (light === "auto" && lightVision === false) Object.assign(rest, { light, lightScale, lightVision });
     const wind = this.engine === "core" ? this.getWind() : null;
     return JSON.stringify([rest, this.performance, this.engine, canvas.dimensions?.size, wind]);
   }
@@ -166,11 +172,24 @@ export class EmitterManager {
     }
 
     this.#applyWind(emitters);
+    this.lights.sync(this.#lightEntries(emitters));
     canvas[LAYER_NAME]?.refreshHandles?.();
   }
 
-  /** Arrête tous les générateurs (changement de scène, désactivation). */
+  /** Effets du moteur maison qui peuvent porter une lumière. */
+  #lightEntries(emitters) {
+    const entries = [];
+    for (const [id, entry] of this.#active) {
+      const emitter = emitters[id];
+      if (!emitter || typeof entry.generator.getLight !== "function") continue;
+      entries.push({ emitter, preset: getPreset(emitter.preset), system: entry.generator });
+    }
+    return entries;
+  }
+
+  /** Arrête tous les générateurs et leurs lumières (changement de scène, désactivation). */
   clear() {
+    this.lights.clear();
     for (const id of [...this.#active.keys()]) this.#destroy(id);
   }
 

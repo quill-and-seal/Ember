@@ -123,6 +123,13 @@ const DRAWERS = {
     ctx.stroke();
   },
 
+  /** Halo de lumière : dégradé très doux et large, pour la lueur portée au sol. */
+  light(ctx) {
+    const h = SIZE / 2;
+    ctx.fillStyle = radial(ctx, h, h, h, [[0, 0.9], [0.2, 0.6], [0.5, 0.22], [0.8, 0.05], [1, 0]]);
+    ctx.fillRect(0, 0, SIZE, SIZE);
+  },
+
   /** Grain de poussière : petit point net. */
   dust(ctx) {
     const h = SIZE / 2;

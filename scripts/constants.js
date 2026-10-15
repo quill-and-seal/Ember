@@ -44,7 +44,13 @@ export const EMITTER_DEFAULTS = Object.freeze({
   color: null,
   elevation: 0,
   windFactor: 1,
-  blowout: true
+  blowout: true,
+  // Lumière liée : "auto" (lumière créée par Ember si l'effet éclaire), "off", ou "linked" (lumière existante)
+  light: "auto",
+  lightLink: null,
+  lightScale: 1,
+  // true : vraie lumière Foundry (compte pour la vision) ; false : simple lueur visuelle
+  lightVision: true
 });
 
 /** Log préfixé. */
