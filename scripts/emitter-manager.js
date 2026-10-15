@@ -14,6 +14,7 @@ import { buildConfig, buildArea, computeWind, finalizeConfig, fallbackConfigs, t
 import { getParticleTexture } from "./textures.js";
 import { EmberParticleSystem } from "./engine/particle-system.js";
 import { createSceneContainer, canvasTicker } from "./engine/placement.js";
+import { spawnPuff } from "./engine/puff.js";
 
 export class EmitterManager {
   /** @type {Map<string, {generator: object, signature: string}>} */
@@ -219,7 +220,20 @@ export class EmitterManager {
     try {
       system = new EmberParticleSystem(cfg, {
         container: createSceneContainer(cfg.elevation),
-        ticker: canvasTicker()
+        ticker: canvasTicker(),
+        // Heure du serveur : les rafales (et donc les extinctions) tombent au même moment pour tous
+        clock: () => game.time?.serverTime ?? Date.now(),
+        onExtinguish: ({ x, y }) =>
+          spawnPuff({
+            container: createSceneContainer(cfg.elevation),
+            ticker: canvasTicker(),
+            x,
+            y,
+            getTexture: getParticleTexture,
+            gridScale: cfg.gridScale,
+            wind: system?.config.wind,
+            size: emitter.size ?? 1
+          })
       });
       system.start();
       return system;
@@ -236,6 +250,10 @@ export class EmitterManager {
 
   /** Générateur intégré à Foundry v14, avec configurations de repli. */
   #spawnCore(emitter, finalized) {
+    // Le générateur de Foundry ne sait pas s'éteindre en direct : une flamme fragile
+    // dans un vent trop fort n'est simplement pas créée (elle revient quand le vent change).
+    if (finalized.blowout && (finalized.airflow ?? 0) >= finalized.blowout.threshold) return null;
+
     const Generator = foundry.canvas?.animation?.ParticleGenerator;
     if (!Generator) {
       if (!this.#warnedMissingApi) {

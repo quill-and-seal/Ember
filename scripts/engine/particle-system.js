@@ -17,6 +17,9 @@
  *   - windEffects  comment l'effet RÉAGIT au courant d'air : multiplicateurs atteints à airflow = 1
  *               { rate, count, scale, life, alpha, lift }. Un feu s'attise (rate, scale > 1),
  *               une fumée se dissipe (life < 1), des lucioles se cachent (rate < 1)…
+ *   - blowout   flamme fragile { threshold, relightDelay } : elle vacille quand le courant d'air
+ *               approche du seuil, s'éteint au-delà (callback onExtinguish, pour une bouffée de
+ *               fumée) et se rallume après relightDelay ms de calme relatif (onRelight).
  *   - drag      frottement (par seconde) qui freine l'élan, dans le plan et en hauteur
  *   - drift     dérive aléatoire ondulante
  * En hauteur :
@@ -54,10 +57,22 @@ export class EmberParticleSystem {
    * @param {PIXI.Container} [options.container]  Conteneur parent déjà placé dans la scène
    * @param {PIXI.Ticker} [options.ticker]        Horloge qui fait avancer la simulation
    * @param {() => number} [options.random]       Générateur aléatoire (tests)
+   * @param {() => number} [options.clock]        Horloge en ms pour les rafales. Dans Foundry, l'heure du
+   *                                              serveur : tous les joueurs voient les mêmes coups de vent.
+   * @param {(pos: {x, y}) => void} [options.onExtinguish]  Appelé quand le vent éteint la flamme
+   * @param {(pos: {x, y}) => void} [options.onRelight]     Appelé quand elle se rallume
    */
-  constructor(config, { container, ticker, random = Math.random } = {}) {
+  constructor(config, { container, ticker, random = Math.random, clock, onExtinguish, onRelight } = {}) {
     this.config = config;
     this.random = random;
+    this.clock = clock ?? (() => globalThis.performance?.now?.() ?? Date.now());
+    this.onExtinguish = onExtinguish ?? null;
+    this.onRelight = onRelight ?? null;
+
+    /** La flamme est-elle allumée ? (seuls les effets « blowout » peuvent s'éteindre) */
+    this.lit = true;
+    this._calmMs = 0;
+    this._flicker = 0;
     this.ticker = ticker ?? globalThis.PIXI?.Ticker?.shared ?? null;
 
     /** Zone d'apparition, relue à chaque particule : on peut la déplacer en direct. */
@@ -95,18 +110,48 @@ export class EmberParticleSystem {
    */
   _windResponse(gustFactor) {
     const fx = this.config.windEffects;
-    const a = Math.min(1.5, (this.config.airflow ?? 0) * gustFactor);
+    const air = (this.config.airflow ?? 0) * gustFactor;
+    const a = Math.min(1.5, air);
     const m = (key) => (fx?.[key] === undefined ? 1 : Math.max(0.05, 1 + (fx[key] - 1) * a));
-    return { rate: m("rate"), count: m("count"), scale: m("scale"), life: m("life"), alpha: m("alpha"), lift: m("lift") };
+    return { air, rate: m("rate"), count: m("count"), scale: m("scale"), life: m("life"), alpha: m("alpha"), lift: m("lift") };
   }
 
   /** Multiplicateur de rafale à l'instant présent (horloge partagée par tous les émetteurs). */
   _gustFactor() {
     const gust = this.config.gust ?? 0;
     if (!gust) return 1;
-    const t = (globalThis.performance?.now?.() ?? Date.now()) / 1000;
+    const t = this.clock() / 1000;
     const wave = 0.6 * Math.sin(t * 0.9) + 0.4 * Math.sin(t * 2.3 + 1.7);
     return Math.max(0, 1 + gust * wave);
+  }
+
+  /**
+   * Flamme fragile : vacillement à l'approche du seuil, extinction au-delà,
+   * rallumage après un moment de calme (seuil × 0,7 pour éviter de clignoter).
+   */
+  _updateFlame(air, ms) {
+    const blow = this.config.blowout;
+    if (!blow?.threshold) {
+      this._flicker = 0;
+      return;
+    }
+    const ratio = air / blow.threshold;
+    this._flicker = this.lit ? Math.min(1, Math.max(0, (ratio - 0.6) / 0.4)) : 0;
+
+    if (this.lit && ratio >= 1) {
+      this.lit = false;
+      this._calmMs = 0;
+      // Les flammes en cours sont soufflées presque instantanément.
+      for (const p of this.particles) p.life = Math.min(p.life, p.age + 120);
+      this.onExtinguish?.(this.center);
+    } else if (!this.lit) {
+      this._calmMs = ratio < 0.7 ? this._calmMs + ms : 0;
+      if (this._calmMs >= (blow.relightDelay ?? 2500)) {
+        this.lit = true;
+        this._calmMs = 0;
+        this.onRelight?.(this.center);
+      }
+    }
   }
 
   /** Particules vivantes. */
@@ -143,7 +188,7 @@ export class EmberParticleSystem {
    */
   stop({ hard = false } = {}) {
     this._stopped = true;
-    if (!hard) return;
+    if (!hard || this._destroyed) return;
     if (this._attached) this.ticker?.remove(this._tick);
     this._attached = false;
     this._destroyed = true;
@@ -168,9 +213,15 @@ export class EmberParticleSystem {
     const gustFactor = this._gustFactor();
     const react = this._windResponse(gustFactor);
     this._react = react;
+    this._updateFlame(react.air, ms);
 
-    // Apparitions
-    if (!this._stopped) {
+    // Vacillement : toute la flamme baisse d'un coup, au hasard, quand elle est près de s'éteindre
+    const f = this._flicker;
+    const flickerAlpha = f ? 1 - 0.55 * f * this.random() : 1;
+    const flickerScale = f ? 1 - 0.25 * f * this.random() : 1;
+
+    // Apparitions (une flamme soufflée ne produit plus rien)
+    if (!this._stopped && this.lit) {
       const maxCount = cfg.count * react.count;
       this._accumulator += (cfg.spawnRate ?? 10) * react.rate * dt;
       while (this._accumulator >= 1 && this.particles.length < maxCount) {
@@ -246,9 +297,9 @@ export class EmberParticleSystem {
       }
 
       // Apparence : la courbe de taille, agrandie par la hauteur
-      const s = sampleCurve(this._scale, t) * (1 + p.z / perspective) * react.scale;
+      const s = sampleCurve(this._scale, t) * (1 + p.z / perspective) * react.scale * flickerScale;
       p.scale.set(s, s);
-      p.alpha = Math.min(1, sampleCurve(this._alpha, t) * react.alpha);
+      p.alpha = Math.min(1, sampleCurve(this._alpha, t) * react.alpha * flickerAlpha);
       p.tint = sampleColor(this._tint, t);
     }
   }

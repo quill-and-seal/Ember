@@ -43,7 +43,8 @@ export const EMITTER_DEFAULTS = Object.freeze({
   radius: null,
   color: null,
   elevation: 0,
-  windFactor: 1
+  windFactor: 1,
+  blowout: true
 });
 
 /** Log préfixé. */

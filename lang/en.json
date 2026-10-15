@@ -12,6 +12,7 @@
     "Preset": {
       "campfire": "Campfire",
       "torch": "Torch",
+      "candle": "Candle",
       "smoke": "Smoke",
       "embers": "Embers",
       "sparks": "Sparks",
@@ -43,7 +44,8 @@
       "Reset": "Reset to the effect's value",
       "Delete": "Delete",
       "WindFactor": "Wind sensitivity",
-      "WindReaction": "Wind reaction"
+      "WindReaction": "Wind reaction",
+      "Blowout": "Wind can blow it out"
     },
     "Picker": {
       "Title": "Effect to place",
@@ -92,7 +94,7 @@
     },
     "WindBehavior": {
       "campfire": "flares up: more, taller, brighter flames",
-      "torch": "brightens and flickers",
+      "torch": "brightens and flickers, goes out in a storm and relights afterwards",
       "smoke": "clears faster",
       "embers": "tears off many more embers",
       "sparks": "slightly more sparks",
@@ -102,7 +104,8 @@
       "poison": "disperses",
       "bubbles": "pop faster",
       "leaves": "tears off many more leaves",
-      "dust": "stirs up dust"
+      "dust": "stirs up dust",
+      "candle": "flickers, goes out in a draft and relights when it dies down"
     }
   }
 }

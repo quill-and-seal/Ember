@@ -131,6 +131,11 @@ export class EmitterConfig extends EmberApp {
         ${range("density", 0.1, 3, 0.05, e.density)}
         ${range("speed", 0.25, 3, 0.05, e.speed)}
         ${range("windFactor", 0, 2, 0.05, e.windFactor)}
+        ${preset?.blowout ? `
+        <div class="form-group">
+          <label>${t("Config.Blowout")}</label>
+          <div class="form-fields"><input type="checkbox" name="blowout" ${e.blowout !== false ? "checked" : ""}></div>
+        </div>` : ""}
         <p class="hint ember-wind-reaction"><i class="fa-solid fa-wind"></i> ${t("Config.WindReaction")} : ${esc(game.i18n.has(`EMBER.WindBehavior.${e.preset}`) ? game.i18n.localize(`EMBER.WindBehavior.${e.preset}`) : "—")}</p>
         <div class="form-group">
           <label>${t("Config.Radius")}</label>
@@ -185,6 +190,7 @@ export class EmitterConfig extends EmberApp {
       density: Number(data.density),
       speed: Number(data.speed),
       windFactor: Number(data.windFactor),
+      blowout: data.blowout === undefined ? current.blowout : !!data.blowout,
       elevation: Number(data.elevation) || 0,
       color: colorInput?.hasAttribute("data-unset") ? null : data.color
     };

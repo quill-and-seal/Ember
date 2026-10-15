@@ -37,6 +37,7 @@ L'outil **Vent de la scène** règle un vent qui pousse tous les effets de la sc
 
 - **il déplace** les particules : la fumée et les feuilles s'envolent, le feu se couche à peine, la magie l'ignore ;
 - **il change le comportement** des effets : un feu s'attise (plus de flammes, plus hautes et plus vives), les braises s'arrachent en masse, la fumée et la brume se dissipent plus vite, les lucioles se cachent, la poussière se soulève. Les rafales font varier ces réactions : le feu se ravive à chaque coup de vent.
+- **il souffle les flammes fragiles** : une bougie s'éteint dans un simple courant d'air, une torche seulement dans la tempête. La flamme vacille quand le vent approche de sa limite, s'éteint dans une bouffée de fumée, puis se rallume quand le vent est retombé quelques secondes. Les rafales suivent l'heure du serveur, donc tous les joueurs voient la flamme s'éteindre au même moment. L'option « Le vent peut l'éteindre » se décoche par émetteur.
 
 Chaque émetteur a un curseur « Sensibilité au vent » (0 = abrité, ni déplacé ni attisé). Avec le moteur maison, tout change en direct, sans relancer les effets ; le générateur de Foundry fige la réaction au moment où l'effet est créé.
 
@@ -46,7 +47,7 @@ Chaque joueur peut réduire la quantité de particules dans les **réglages du m
 
 ## Effets inclus
 
-Feu de camp · Torche · Fumée · Braises · Étincelles · Lucioles · Aura arcanique · Lumière sacrée · Brume toxique · Bulles · Feuilles qui tombent · Poussière en suspension
+Feu de camp · Torche · Bougie · Fumée · Braises · Étincelles · Lucioles · Aura arcanique · Lumière sacrée · Brume toxique · Bulles · Feuilles qui tombent · Poussière en suspension
 
 ## API pour les macros
 

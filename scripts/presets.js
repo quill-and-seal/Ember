@@ -32,6 +32,9 @@
  *   windFactor  Sensibilité au vent de scène (0 = insensible, 1 = suit le vent, >1 = s'envole)
  *   windEffects Réaction de l'effet au courant d'air, en multiplicateurs atteints par vent fort
  *               (force 100) : { rate, count, scale, life, alpha, lift }. Les rafales la font varier.
+ *   blowout     Flamme fragile : { threshold, relightDelay }. Elle vacille quand le courant d'air
+ *               approche du seuil (100 = vent fort), s'éteint au-delà dans une bouffée de fumée
+ *               et se rallume après relightDelay ms d'accalmie.
  *   drag        Frottement par seconde (0 = aucun)
  *
  *   En hauteur (moteur maison uniquement) :
@@ -66,6 +69,7 @@ export const PRESETS = {
     icon: "fa-solid fa-fire-flame-simple",
     windFactor: 0.3,
     windEffects: { rate: 1.4, count: 1.3, scale: 1.2, life: 0.85 },
+    blowout: { threshold: 1.15, relightDelay: 4000 },
     textures: ["flame", "glow"],
     area: { shape: "circle", radius: 0.06 },
     count: 45,
@@ -80,6 +84,27 @@ export const PRESETS = {
     blend: "add",
     rotation: { spread: 180, speed: [-30, 30] },
     drift: 0.1
+  },
+
+  candle: {
+    icon: "fa-solid fa-candle-holder",
+    windFactor: 0.25,
+    windEffects: { scale: 0.9, life: 0.9 },
+    blowout: { threshold: 0.35, relightDelay: 3000 },
+    textures: ["flame", "glow"],
+    area: { shape: "circle", radius: 0.02 },
+    count: 18,
+    rate: 18,
+    lifetime: [400, 700],
+    velocity: { x: [-1, 1], y: [-1, 1] },
+    radial: [0, 3],
+    lift: [30, 50],
+    scale: [[0, 0.28], [0.5, 0.2], [1, 0.06]],
+    alpha: [[0, 0], [0.1, 0.85], [1, 0]],
+    color: [[0, "#fffbe6"], [0.3, "#ffd27a"], [0.7, "#ff8a2a"], [1, "#5a2a0a"]],
+    blend: "add",
+    rotation: { spread: 180, speed: [-20, 20] },
+    drift: 0.05
   },
 
   smoke: {

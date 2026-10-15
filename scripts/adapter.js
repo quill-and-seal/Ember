@@ -188,6 +188,8 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     gust: air.gust,
     airflow: air.airflow,
     windEffects: preset.windEffects ?? null,
+    // Flamme fragile, sauf si le MJ a désactivé l'extinction sur cet émetteur
+    blowout: preset.blowout && emitter.blowout !== false ? { ...preset.blowout } : null,
     drag: (preset.drag ?? 0) * speed,
     height: scaleRange(preset.height ?? [0, 0], g),
     lift: scaleRange(preset.lift ?? [0, 0], g * speed),
@@ -207,7 +209,7 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
 
 /** Clés comprises uniquement par le moteur maison. */
 const EMBER_ONLY_KEYS = [
-  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "drag", "height", "lift", "fall",
+  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "drag", "height", "lift", "fall",
   "groundFade", "perspective", "gravity", "prewarm", "gridScale"
 ];
 

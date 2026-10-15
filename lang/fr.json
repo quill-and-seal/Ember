@@ -12,6 +12,7 @@
     "Preset": {
       "campfire": "Feu de camp",
       "torch": "Torche",
+      "candle": "Bougie",
       "smoke": "Fumée",
       "embers": "Braises",
       "sparks": "Étincelles",
@@ -43,7 +44,8 @@
       "Reset": "Revenir à la valeur de l'effet",
       "Delete": "Supprimer",
       "WindFactor": "Sensibilité au vent",
-      "WindReaction": "Réaction au vent"
+      "WindReaction": "Réaction au vent",
+      "Blowout": "Le vent peut l'éteindre"
     },
     "Picker": {
       "Title": "Effet à poser",
@@ -92,7 +94,7 @@
     },
     "WindBehavior": {
       "campfire": "s'attise : plus de flammes, plus hautes et plus vives",
-      "torch": "s'avive et vacille",
+      "torch": "s'avive et vacille, s'éteint dans la tempête et se rallume ensuite",
       "smoke": "se dissipe plus vite",
       "embers": "arrache beaucoup plus de braises",
       "sparks": "un peu plus d'étincelles",
@@ -102,7 +104,8 @@
       "poison": "se disperse",
       "bubbles": "éclatent plus vite",
       "leaves": "arrache bien plus de feuilles",
-      "dust": "soulève la poussière"
+      "dust": "soulève la poussière",
+      "candle": "vacille, s'éteint dans un courant d'air et se rallume quand il retombe"
     }
   }
 }

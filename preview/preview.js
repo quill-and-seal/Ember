@@ -8,6 +8,7 @@ import { PRESETS } from "../scripts/presets.js";
 import { buildConfig, buildArea, computeWind, finalizeConfig, presetRadius } from "../scripts/adapter.js";
 import { getParticleTexture } from "../scripts/textures.js";
 import { EmberParticleSystem } from "../scripts/engine/particle-system.js";
+import { spawnPuff } from "../scripts/engine/puff.js";
 import fr from "../lang/fr.json";
 
 const GRID = 100;
@@ -67,7 +68,15 @@ function rebuild() {
   container = new PIXI.Container();
   app.stage.addChildAt(container, 1);
   const cfg = finalizeConfig(buildConfig(state, PRESETS[state.preset], { gridPx: GRID, wind }), getParticleTexture);
-  system = new EmberParticleSystem(cfg, { container, ticker: app.ticker });
+  system = new EmberParticleSystem(cfg, {
+    container,
+    ticker: app.ticker,
+    onExtinguish: ({ x, y }) => {
+      const puffLayer = new PIXI.Container();
+      app.stage.addChildAt(puffLayer, 1);
+      spawnPuff({ container: puffLayer, ticker: app.ticker, x, y, getTexture: getParticleTexture, wind: system.config.wind, size: state.size });
+    }
+  });
   system.start();
   app.stage.addChild(marker);
   drawMarker();
@@ -214,8 +223,15 @@ app.view.addEventListener("pointerup", () => (dragging = false));
 setInterval(() => {
   document.getElementById("stat-live").textContent = system?.liveCount ?? 0;
   const r = system?._react;
+  const flame = system?.config.blowout
+    ? system.lit
+      ? system._flicker > 0
+        ? " · vacille"
+        : " · allumée"
+      : " · éteinte"
+    : "";
   document.getElementById("wind-live").textContent =
-    wind.enabled && r ? `débit ${r.rate.toFixed(2)}× · taille ${r.scale.toFixed(2)}× · vie ${r.life.toFixed(2)}×` : "calme";
+    (wind.enabled && r ? `débit ${r.rate.toFixed(2)}× · taille ${r.scale.toFixed(2)}×` : "calme") + flame;
 }, 200);
 
 // Démarrage
