@@ -105,11 +105,17 @@ function renderPresets() {
 
 function renderStats(cfg) {
   const preset = PRESETS[state.preset];
-  const g = preset.gravity?.y ?? 0;
+  const motion = [];
+  if (preset.lift?.[1] > 0) motion.push("monte");
+  if (preset.lift?.[1] < 0 || (preset.height?.[1] ?? 0) > 100) motion.push("descend");
+  if (preset.fall) motion.push("retombe");
+  if (preset.radial?.[1]) motion.push("rayonne");
+  if (preset.swirl?.[1]) motion.push("tourbillonne");
+  if (preset.wind) motion.push("vent");
   document.getElementById("stat-max").textContent = cfg.count;
   document.getElementById("stat-rate").textContent = `${Math.round(cfg.spawnRate)}/s`;
   document.getElementById("stat-life").textContent = `${(preset.lifetime[0] / 1000).toFixed(1)}–${(preset.lifetime[1] / 1000).toFixed(1)} s`;
-  document.getElementById("stat-gravity").textContent = g ? `${g} px/s²` : "aucune";
+  document.getElementById("stat-motion").textContent = motion.join(", ") || "flotte";
 }
 
 function syncControls() {

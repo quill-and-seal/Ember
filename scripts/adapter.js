@@ -145,8 +145,18 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     },
     drift: { enabled: (preset.drift ?? 0) > 0, intensity: preset.drift ?? 0 },
     elevation: emitter.elevation ?? 0,
-    // Options propres au moteur maison (retirées pour le générateur de Foundry).
-    // La gravité suit le carré de la vitesse pour garder la même trajectoire.
+    // Options propres au moteur maison, pensées pour la vue du dessus
+    // (retirées ou approximées pour le générateur de Foundry).
+    // Les accélérations suivent le carré de la vitesse pour garder les mêmes trajectoires.
+    radial: scaleRange(preset.radial ?? [0, 0], g * speed),
+    swirl: scaleRange(preset.swirl ?? [0, 0], speed),
+    wind: { x: (preset.wind?.x ?? 0) * g * speed, y: (preset.wind?.y ?? 0) * g * speed },
+    drag: (preset.drag ?? 0) * speed,
+    height: scaleRange(preset.height ?? [0, 0], g),
+    lift: scaleRange(preset.lift ?? [0, 0], g * speed),
+    fall: (preset.fall ?? 0) * g * speed * speed,
+    groundFade: preset.groundFade ?? null,
+    perspective: 300 * g,
     gravity: {
       x: (preset.gravity?.x ?? 0) * g * speed * speed,
       y: (preset.gravity?.y ?? 0) * g * speed * speed
@@ -159,7 +169,10 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
 }
 
 /** Clés comprises uniquement par le moteur maison. */
-const EMBER_ONLY_KEYS = ["gravity", "prewarm", "gridScale"];
+const EMBER_ONLY_KEYS = [
+  "radial", "swirl", "wind", "drag", "height", "lift", "fall",
+  "groundFade", "perspective", "gravity", "prewarm", "gridScale"
+];
 
 /** Ajoute ce qui dépend de PIXI : textures et mode de fusion (PIXI 7 : nombres, PIXI 8 : chaînes). */
 export function finalizeConfig(cfg, getTexture) {
@@ -171,9 +184,22 @@ export function finalizeConfig(cfg, getTexture) {
   return rest;
 }
 
-/** Configuration pour le générateur de Foundry : sans les options du moteur maison. */
+/**
+ * Configuration pour le générateur de Foundry, qui n'a ni hauteur ni élan radial.
+ * On approxime : l'élan radial élargit la vitesse aléatoire dans toutes les
+ * directions, et le vent la décale. Le reste est retiré.
+ */
 export function toCoreConfig(cfg) {
   const out = { ...cfg };
+  const r = Math.max(Math.abs(cfg.radial?.[0] ?? 0), Math.abs(cfg.radial?.[1] ?? 0)) * 0.7;
+  const wx = cfg.wind?.x ?? 0;
+  const wy = cfg.wind?.y ?? 0;
+  if (cfg.velocity) {
+    out.velocity = {
+      x: [cfg.velocity.x[0] - r + wx, cfg.velocity.x[1] + r + wx],
+      y: [cfg.velocity.y[0] - r + wy, cfg.velocity.y[1] + r + wy]
+    };
+  }
   for (const key of EMBER_ONLY_KEYS) delete out[key];
   return out;
 }

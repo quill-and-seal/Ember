@@ -1,10 +1,26 @@
 /**
- * Moteur de particules maison d'Ember.
+ * Moteur de particules maison d'Ember, pensé pour une carte VUE DU DESSUS.
  *
- * Il lit la même configuration que celle produite par adapter.js pour le
- * générateur de Foundry (zone, nombre, débit, durée de vie, vitesses, courbes
- * de taille/opacité/couleur, rotation, dérive) et ajoute :
- *   - gravity   { x, y } en px/s²
+ * Sur une carte de JDR, la caméra regarde le sol à la verticale. « Monter » veut
+ * donc dire se rapprocher de la caméra, pas aller vers le haut de l'écran.
+ * Le moteur simule une hauteur z pour chaque particule :
+ *   - plus une particule est haute, plus elle paraît grosse (perspective) ;
+ *   - la retombée (fall) la ramène vers le sol, où elle peut s'éteindre (groundFade).
+ * Dans le plan de la carte, les mouvements possibles sont :
+ *   - velocity  vitesse aléatoire { x: [min, max], y: [min, max] } en px/s
+ *   - radial    élan qui s'éloigne du centre de la source [min, max] en px/s
+ *   - swirl     tourbillon autour du centre [min, max] en degrés/s
+ *   - wind      vent constant { x, y } en px/s
+ *   - drag      frottement (par seconde) qui freine l'élan, dans le plan et en hauteur
+ *   - drift     dérive aléatoire ondulante
+ * En hauteur :
+ *   - height    hauteur de départ [min, max] en px
+ *   - lift      vitesse verticale de départ [min, max] en px/s (négatif = descend)
+ *   - fall      retombée en px/s² (gravité vers le sol)
+ *   - perspective  hauteur (px) à laquelle une particule paraît deux fois plus grosse
+ *
+ * Il lit aussi tout ce que comprend le générateur de Foundry (zone, nombre, débit,
+ * durée de vie, courbes de taille/opacité/couleur, rotation) et ajoute :
  *   - prewarm   durée simulée au démarrage (ms) pour qu'un feu soit déjà « pris »
  *
  * Il ne dépend que des bases de PIXI (Container, Sprite, Ticker), communes à PIXI 7 et 8,
@@ -19,7 +35,11 @@ const DRIFT_ACCEL = 40;
 /** Pas maximal d'une mise à jour, pour éviter les sauts après un onglet en arrière-plan. */
 const MAX_STEP_MS = 100;
 
+/** Perspective par défaut : à 300 px de haut, une particule paraît deux fois plus grosse. */
+const DEFAULT_PERSPECTIVE = 300;
+
 const TAU = Math.PI * 2;
+const DEG = Math.PI / 180;
 
 export class EmberParticleSystem {
   /**
@@ -54,6 +74,13 @@ export class EmberParticleSystem {
   /** Particules vivantes. */
   get liveCount() {
     return this.particles.length;
+  }
+
+  /** Centre de la zone d'apparition (pour l'élan radial et le tourbillon). */
+  get center() {
+    const a = this.spawnArea ?? {};
+    if ("width" in a) return { x: a.x + a.width / 2, y: a.y + a.height / 2 };
+    return { x: a.x ?? 0, y: a.y ?? 0 };
   }
 
   /* -------------------------------------------- */
@@ -109,10 +136,18 @@ export class EmberParticleSystem {
       if (this.particles.length >= cfg.count) this._accumulator = Math.min(this._accumulator, 1);
     }
 
+    // Paramètres communs à toutes les particules pour ce pas
     const gx = cfg.gravity?.x ?? 0;
     const gy = cfg.gravity?.y ?? 0;
+    const windX = cfg.wind?.x ?? 0;
+    const windY = cfg.wind?.y ?? 0;
+    const fall = cfg.fall ?? 0;
+    const damping = cfg.drag ? Math.exp(-cfg.drag * dt) : 1;
+    const perspective = cfg.perspective ?? DEFAULT_PERSPECTIVE;
+    const groundFade = cfg.groundFade ?? null;
     const drift = cfg.drift?.enabled ? (cfg.drift.intensity ?? 0) * DRIFT_ACCEL * (cfg.gridScale ?? 1) : 0;
     const align = !!cfg.rotation?.alignVelocity;
+    const { x: cx, y: cy } = this.center;
 
     // Mise à jour (parcours à l'envers pour recycler sans décaler les index)
     for (let i = this.particles.length - 1; i >= 0; i--) {
@@ -124,18 +159,50 @@ export class EmberParticleSystem {
       }
       const t = p.age / p.life;
 
-      p.vx += gx * dt;
-      p.vy += gy * dt;
+      // Plan de la carte
+      p.vx = (p.vx + gx * dt) * damping;
+      p.vy = (p.vy + gy * dt) * damping;
       if (drift) {
         const a = p.phase + p.age * p.wobble;
         p.vx += Math.cos(a) * drift * dt;
         p.vy += Math.sin(a * 1.3) * drift * dt;
       }
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.rotation = align ? Math.atan2(p.vy, p.vx) : p.rotation + p.spin * dt;
+      p.x += (p.vx + windX) * dt;
+      p.y += (p.vy + windY) * dt;
 
-      const s = sampleCurve(this._scale, t);
+      if (p.swirl) {
+        const angle = p.swirl * dt;
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const dx = p.x - cx;
+        const dy = p.y - cy;
+        p.x = cx + dx * cos - dy * sin;
+        p.y = cy + dx * sin + dy * cos;
+      }
+
+      // Hauteur
+      if (!p.grounded) {
+        p.vz = (p.vz - fall * dt) * damping;
+        p.z += p.vz * dt;
+        if (p.z <= 0 && p.vz <= 0) {
+          p.z = 0;
+          p.vz = 0;
+          p.grounded = true;
+          p.vx = 0;
+          p.vy = 0;
+          if (groundFade !== null) p.life = Math.min(p.life, p.age + groundFade);
+        }
+      }
+
+      // Orientation
+      if (align) {
+        if (p.vx || p.vy) p.rotation = Math.atan2(p.vy, p.vx);
+      } else {
+        p.rotation += p.spin * dt;
+      }
+
+      // Apparence : la courbe de taille, agrandie par la hauteur
+      const s = sampleCurve(this._scale, t) * (1 + p.z / perspective);
       p.scale.set(s, s);
       p.alpha = sampleCurve(this._alpha, t);
       p.tint = sampleColor(this._tint, t);
@@ -163,11 +230,30 @@ export class EmberParticleSystem {
     }
     if (cfg.blend !== undefined) p.blendMode = cfg.blend;
 
+    // Position et élan dans le plan
     const { x, y } = this._samplePosition();
+    const { x: cx, y: cy } = this.center;
     p.x = x;
     p.y = y;
     p.vx = sampleRange(cfg.velocity?.x ?? 0, rand);
     p.vy = sampleRange(cfg.velocity?.y ?? 0, rand);
+    const radial = sampleRange(cfg.radial ?? 0, rand);
+    if (radial) {
+      const dx = x - cx;
+      const dy = y - cy;
+      const d = Math.hypot(dx, dy);
+      // Au centre exact, on part dans une direction au hasard.
+      const angle = d > 0.5 ? Math.atan2(dy, dx) : rand() * TAU;
+      p.vx += Math.cos(angle) * radial;
+      p.vy += Math.sin(angle) * radial;
+    }
+    p.swirl = sampleRange(cfg.swirl ?? 0, rand) * DEG;
+
+    // Hauteur
+    p.z = Math.max(0, sampleRange(cfg.height ?? 0, rand));
+    p.vz = sampleRange(cfg.lift ?? 0, rand);
+    p.grounded = false;
+
     p.age = 0;
     p.life = Math.max(1, sampleRange(cfg.lifetime ?? [1000, 1000], rand));
     p.phase = rand() * TAU;
@@ -175,9 +261,11 @@ export class EmberParticleSystem {
 
     const rot = cfg.rotation ?? {};
     p.rotation = (rot.initial ?? 0) + (rand() * 2 - 1) * (rot.spread ?? 0);
-    p.spin = (sampleRange(rot.speed ?? 0, rand) * Math.PI) / 180;
+    p.spin = sampleRange(rot.speed ?? 0, rand) * DEG;
+    if (rot.alignVelocity && (p.vx || p.vy)) p.rotation = Math.atan2(p.vy, p.vx);
 
-    const s = sampleCurve(this._scale, 0);
+    const perspective = cfg.perspective ?? DEFAULT_PERSPECTIVE;
+    const s = sampleCurve(this._scale, 0) * (1 + p.z / perspective);
     p.scale.set(s, s);
     p.alpha = sampleCurve(this._alpha, 0);
     p.tint = sampleColor(this._tint, 0);

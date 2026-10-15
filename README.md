@@ -4,8 +4,8 @@ Effets de particules pour **Foundry VTT v14** : feux de camp, torches, fumée, b
 
 Ember a deux moteurs de rendu, au choix du MJ dans les réglages du module (« Moteur de rendu ») :
 
-- **Ember (maison, par défaut)** : le moteur du module, avec gravité et préchauffage (un feu est déjà « pris » quand la scène s'ouvre). Il ne dépend que des bases de PIXI.
-- **Foundry (expérimental)** : le générateur intégré à Foundry v14 (`foundry.canvas.animation.ParticleGenerator`).
+- **Ember (maison, par défaut)** : le moteur du module, pensé pour une carte vue du dessus. Chaque particule a une hauteur simulée : ce qui monte grossit en se rapprochant de la caméra, ce qui retombe rapetisse jusqu'au sol. Dans le plan, les effets rayonnent depuis leur source, tourbillonnent ou suivent le vent. Il démarre préchauffé (un feu est déjà « pris » quand la scène s'ouvre) et ne dépend que des bases de PIXI.
+- **Foundry (expérimental)** : le générateur intégré à Foundry v14 (`foundry.canvas.animation.ParticleGenerator`). Il n'a pas de hauteur : la montée, la retombée et le tourbillon sont perdus, l'élan et le vent sont approximés.
 
 Les deux lisent les mêmes presets. Aucune image à télécharger : les textures sont générées à la volée.
 
