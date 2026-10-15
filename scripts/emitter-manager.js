@@ -1,6 +1,7 @@
 /**
  * Gestion des émetteurs : lecture/écriture dans les flags de la scène et
- * création des générateurs de particules correspondants sur chaque client.
+ * création des générateurs de particules correspondants sur chaque client,
+ * avec le moteur maison ou le générateur intégré à Foundry.
  *
  * Les émetteurs vivent dans scene.flags["ember-particles"].emitters.
  * Quand le MJ modifie la scène, Foundry diffuse la mise à jour à tous les
@@ -9,8 +10,10 @@
 
 import { MODULE_ID, FLAG_EMITTERS, EMITTER_DEFAULTS, LAYER_NAME, warn, t } from "./constants.js";
 import { getPreset } from "./presets.js";
-import { buildConfig, buildArea, finalizeConfig, fallbackConfigs } from "./adapter.js";
+import { buildConfig, buildArea, finalizeConfig, fallbackConfigs, toCoreConfig } from "./adapter.js";
 import { getParticleTexture } from "./textures.js";
+import { EmberParticleSystem } from "./engine/particle-system.js";
+import { createSceneContainer, canvasTicker } from "./engine/placement.js";
 
 export class EmitterManager {
   /** @type {Map<string, {generator: object, signature: string}>} */
@@ -92,6 +95,15 @@ export class EmitterManager {
     }
   }
 
+  /** Moteur de rendu choisi par le MJ : "ember" (maison) ou "core" (Foundry). */
+  get engine() {
+    try {
+      return game.settings.get(MODULE_ID, "engine") ?? "ember";
+    } catch {
+      return "ember";
+    }
+  }
+
   /** Doit-on afficher cet émetteur pour l'utilisateur courant ? */
   #isVisible(emitter) {
     if (!emitter.enabled) return false;
@@ -102,7 +114,7 @@ export class EmitterManager {
   /** Signature des réglages qui influencent le rendu (le libellé n'en fait pas partie). */
   #signature(emitter) {
     const { label, id, ...rest } = emitter;
-    return JSON.stringify([rest, this.performance, canvas.dimensions?.size]);
+    return JSON.stringify([rest, this.performance, this.engine, canvas.dimensions?.size]);
   }
 
   /** Aligne les générateurs actifs sur les émetteurs de la scène affichée. */
@@ -159,8 +171,40 @@ export class EmitterManager {
     }
   }
 
-  /** Crée et démarre le générateur d'un émetteur, avec configurations de repli. */
+  /** Crée et démarre le générateur d'un émetteur avec le moteur choisi par le MJ. */
   #spawn(emitter) {
+    const preset = getPreset(emitter.preset);
+    const base = buildConfig(emitter, preset, {
+      gridPx: canvas.dimensions.size,
+      performance: this.performance
+    });
+    const finalized = finalizeConfig(base, getParticleTexture);
+    return this.engine === "core" ? this.#spawnCore(emitter, finalized) : this.#spawnEmber(emitter, finalized);
+  }
+
+  /** Moteur maison. */
+  #spawnEmber(emitter, cfg) {
+    let system;
+    try {
+      system = new EmberParticleSystem(cfg, {
+        container: createSceneContainer(cfg.elevation),
+        ticker: canvasTicker()
+      });
+      system.start();
+      return system;
+    } catch (err) {
+      warn(`Impossible de créer l'émetteur ${emitter.id} (moteur maison)`, err);
+      try {
+        system?.stop({ hard: true });
+      } catch {
+        /* ignoré */
+      }
+      return null;
+    }
+  }
+
+  /** Générateur intégré à Foundry v14, avec configurations de repli. */
+  #spawnCore(emitter, finalized) {
     const Generator = foundry.canvas?.animation?.ParticleGenerator;
     if (!Generator) {
       if (!this.#warnedMissingApi) {
@@ -170,15 +214,8 @@ export class EmitterManager {
       return null;
     }
 
-    const preset = getPreset(emitter.preset);
-    const base = buildConfig(emitter, preset, {
-      gridPx: canvas.dimensions.size,
-      performance: this.performance
-    });
-    const finalized = finalizeConfig(base, getParticleTexture);
-
     let lastError;
-    const attempts = fallbackConfigs(finalized);
+    const attempts = fallbackConfigs(toCoreConfig(finalized));
     for (let level = 0; level < attempts.length; level++) {
       let generator;
       try {

@@ -1,0 +1,258 @@
+<title>Ember Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Mise en page : une scène sombre façon table de jeu à gauche, l'établi de réglages à droite (empilés sur mobile).
+     Look volontairement unique et sombre : les particules lumineuses se lisent sur un fond nocturne. */
+  :root {
+    --night: #120e0b;
+    --stone: #1d1712;
+    --panel: #241c16;
+    --line: #3a2e24;
+    --text: #efe3d1;
+    --muted: #a8937a;
+    --flame: #e8a34f;
+    --flame-hot: #ffd27a;
+    --font-display: "IM Fell English SC", "Georgia", serif;
+    --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "Consolas", monospace;
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; }
+  body {
+    background: var(--night);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+  }
+
+  .shell {
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+
+  .stage {
+    position: relative;
+    min-width: 0;
+    min-height: 320px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 65%, #2a1f17 0%, transparent 60%),
+      var(--stone);
+    cursor: crosshair;
+    touch-action: none;
+  }
+  .stage canvas { display: block; }
+
+  .stage-label {
+    position: absolute;
+    left: max(16px, env(safe-area-inset-left, 0px));
+    bottom: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .bench {
+    min-width: 0;
+    overflow-y: auto;
+    background: var(--panel);
+    border-left: 1px solid var(--line);
+    padding-block: 20px 28px;
+    padding-left: 20px;
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  header h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 34px;
+    line-height: 1;
+    color: var(--flame-hot);
+    letter-spacing: 0.02em;
+    text-wrap: balance;
+  }
+  header p {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  h2 {
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .preset {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 9px;
+    text-align: left;
+    font: inherit;
+    font-size: 13px;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .preset:hover { border-color: var(--muted); }
+  .preset[aria-pressed="true"] {
+    border-color: var(--flame);
+    background: rgba(232, 163, 79, 0.1);
+  }
+  .preset:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--flame-hot);
+    outline-offset: 2px;
+  }
+  .swatch {
+    display: block;
+    height: 4px;
+    border-radius: 2px;
+  }
+
+  .control {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) 70px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .control output {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-align: right;
+    color: var(--flame-hot);
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--flame); }
+
+  .color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .color-row input[type="color"] {
+    width: 40px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: none;
+  }
+
+  .ghost {
+    font: inherit;
+    font-size: 13px;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .ghost:hover { border-color: var(--flame); color: var(--flame-hot); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 14px;
+    margin: 0;
+    font-size: 13px;
+  }
+  .stats dt { color: var(--muted); }
+  .stats dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  footer { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  @media (max-width: 760px) {
+    .shell {
+      grid-template-columns: 1fr;
+      grid-template-rows: 55vh auto;
+      height: auto;
+    }
+    .bench { border-left: 0; border-top: 1px solid var(--line); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  }
+</style>
+
+<div class="shell">
+  <div class="stage" id="stage">
+    <div class="stage-label">Clique ou glisse pour déplacer l'émetteur · 1 case = 100 px</div>
+  </div>
+
+  <aside class="bench">
+    <header>
+      <h1>Ember</h1>
+      <p>Aperçu du moteur de particules maison du module Foundry VTT, avec les presets réels de la branche <code>moteur-maison</code>.</p>
+    </header>
+
+    <section>
+      <h2>Effet</h2>
+      <div class="presets" id="presets"></div>
+    </section>
+
+    <section>
+      <h2>Réglages de l'émetteur</h2>
+      <label class="control"><span>Taille</span><input type="range" id="size" min="0.25" max="4" step="0.05"><output id="size-out"></output></label>
+      <label class="control"><span>Densité</span><input type="range" id="density" min="0.1" max="3" step="0.05"><output id="density-out"></output></label>
+      <label class="control"><span>Vitesse</span><input type="range" id="speed" min="0.25" max="3" step="0.05"><output id="speed-out"></output></label>
+      <label class="control"><span>Rayon</span><input type="range" id="radius" min="0.05" max="3" step="0.05"><output id="radius-out"></output></label>
+      <div class="color-row">
+        <input type="color" id="color" aria-label="Couleur">
+        <span id="color-state">couleurs de l'effet</span>
+        <button type="button" class="ghost" id="color-reset">Couleurs d'origine</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Moteur</h2>
+      <dl class="stats">
+        <dt>Particules vivantes</dt><dd id="stat-live">0</dd>
+        <dt>Maximum</dt><dd id="stat-max">0</dd>
+        <dt>Débit</dt><dd id="stat-rate">0</dd>
+        <dt>Durée de vie</dt><dd id="stat-life">0</dd>
+        <dt>Gravité</dt><dd id="stat-gravity">aucune</dd>
+      </dl>
+      <p style="margin:12px 0 0"><button type="button" class="ghost" id="burst">Gerbe de 60 particules</button></p>
+    </section>
+
+    <footer>Quill &amp; Seal · Les réglages appliqués ici sont ceux de la fenêtre « Émetteur de particules » dans Foundry.</footer>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+<script>
+(()=>{var m={campfire:{icon:"fa-solid fa-fire",textures:["flame","glow"],area:{shape:"circle",radius:.25},count:120,rate:70,lifetime:[700,1300],velocity:{x:[-12,12],y:[-90,-45]},scale:[[0,.7],[.5,.45],[1,.12]],alpha:[[0,0],[.12,.65],[1,0]],color:[[0,"#fff2b0"],[.3,"#ffae3d"],[.65,"#ff5a1f"],[1,"#5a1e0a"]],blend:"add",rotation:{spread:20,speed:[-20,20]},drift:.15},torch:{icon:"fa-solid fa-fire-flame-simple",textures:["flame","glow"],area:{shape:"circle",radius:.08},count:50,rate:40,lifetime:[500,900],velocity:{x:[-6,6],y:[-70,-35]},scale:[[0,.45],[.5,.28],[1,.08]],alpha:[[0,0],[.1,.7],[1,0]],color:[[0,"#fff4c2"],[.35,"#ffb347"],[.7,"#ff6224"],[1,"#4a1806"]],blend:"add",rotation:{spread:15,speed:[-15,15]},drift:.1},smoke:{icon:"fa-solid fa-smog",textures:["smoke"],area:{shape:"circle",radius:.2},count:40,rate:6,lifetime:[4e3,6500],velocity:{x:[-10,10],y:[-30,-15]},scale:[[0,.6],[1,1.8]],alpha:[[0,0],[.2,.35],[1,0]],color:[[0,"#6b6b6b"],[1,"#3a3a3a"]],blend:"normal",rotation:{spread:180,speed:[-15,15]},drift:.3},embers:{icon:"fa-solid fa-fire-flame-curved",textures:["ember"],area:{shape:"circle",radius:.3},count:40,rate:10,lifetime:[2e3,3500],velocity:{x:[-20,20],y:[-60,-25]},scale:[[0,.18],[1,.08]],alpha:[[0,0],[.1,1],[1,0]],color:[[0,"#ffd27a"],[.5,"#ff6a1a"],[1,"#a01e00"]],blend:"add",rotation:{spread:0,speed:[0,0]},drift:.6,gravity:{x:0,y:6}},sparks:{icon:"fa-solid fa-bolt",textures:["spark"],area:{shape:"circle",radius:.05},count:60,rate:30,lifetime:[300,700],velocity:{x:[-140,140],y:[-160,20]},scale:[[0,.55],[1,.2]],alpha:[[0,1],[1,0]],color:[[0,"#ffffff"],[.4,"#ffd37a"],[1,"#ff7b1c"]],blend:"add",rotation:{spread:0,speed:[0,0],align:!0},drift:0,gravity:{x:0,y:320}},fireflies:{icon:"fa-solid fa-bug",textures:["glow"],area:{shape:"circle",radius:1.5},count:25,rate:4,lifetime:[4e3,7e3],velocity:{x:[-12,12],y:[-12,12]},scale:[[0,.15],[1,.15]],alpha:[[0,0],[.2,1],[.5,.2],[.75,1],[1,0]],color:[[0,"#d6ff7a"],[1,"#9bff4a"]],blend:"add",rotation:{spread:0,speed:[0,0]},drift:1},arcane:{icon:"fa-solid fa-wand-sparkles",textures:["star","glow"],area:{shape:"ring",inner:.3,outer:.5},count:50,rate:15,lifetime:[1500,2600],velocity:{x:[-8,8],y:[-35,-10]},scale:[[0,.3],[1,.05]],alpha:[[0,0],[.15,1],[1,0]],color:[[0,"#e0b3ff"],[.5,"#8a5cff"],[1,"#3b1d9e"]],blend:"add",rotation:{spread:180,speed:[-90,90]},drift:.2},holy:{icon:"fa-solid fa-sun",textures:["glow","star"],area:{shape:"circle",radius:.4},count:45,rate:14,lifetime:[2e3,3200],velocity:{x:[-5,5],y:[-45,-20]},scale:[[0,.22],[1,.05]],alpha:[[0,0],[.15,1],[1,0]],color:[[0,"#fffbe0"],[.5,"#ffd76a"],[1,"#c99a2e"]],blend:"add",rotation:{spread:180,speed:[-30,30]},drift:.2},poison:{icon:"fa-solid fa-skull-crossbones",textures:["smoke"],area:{shape:"circle",radius:.5},count:30,rate:6,lifetime:[3e3,5e3],velocity:{x:[-12,12],y:[-12,8]},scale:[[0,.8],[1,1.6]],alpha:[[0,0],[.3,.4],[1,0]],color:[[0,"#8bdc5a"],[1,"#3f7d24"]],blend:"normal",rotation:{spread:180,speed:[-10,10]},drift:.5},bubbles:{icon:"fa-solid fa-circle-dot",textures:["bubble"],area:{shape:"circle",radius:.3},count:20,rate:5,lifetime:[2500,4e3],velocity:{x:[-6,6],y:[-40,-20]},scale:[[0,.12],[1,.25]],alpha:[[0,0],[.1,.8],[.85,.8],[1,0]],color:[[0,"#cdefff"],[1,"#cdefff"]],blend:"normal",rotation:{spread:0,speed:[0,0]},drift:.8},leaves:{icon:"fa-solid fa-leaf",textures:["leaf"],area:{shape:"circle",radius:1},count:15,rate:2,lifetime:[5e3,8e3],velocity:{x:[10,35],y:[15,35]},scale:[[0,.25],[1,.25]],alpha:[[0,0],[.1,1],[.85,1],[1,0]],color:[[0,"#c97a2a"],[1,"#8a4b1a"]],blend:"normal",rotation:{spread:180,speed:[-60,60]},drift:.8},dust:{icon:"fa-solid fa-wind",textures:["dust"],area:{shape:"circle",radius:1.2},count:40,rate:6,lifetime:[5e3,9e3],velocity:{x:[-6,6],y:[-6,6]},scale:[[0,.06],[1,.08]],alpha:[[0,0],[.3,.6],[1,0]],color:[[0,"#fff3d6"],[1,"#fff3d6"]],blend:"add",rotation:{spread:0,speed:[0,0]},drift:.7}};var ce=Object.freeze({label:"",preset:"campfire",x:0,y:0,enabled:!0,hidden:!1,size:1,density:1,speed:1,radius:null,color:null,elevation:0});function D(e){if(typeof e=="number")return e;if(typeof e!="string")return null;let t=e.trim().match(/^#?([0-9a-f]{6})$/i);return t?parseInt(t[1],16):null}function F(e,t){let r=t>=0?255:0,n=Math.min(1,Math.abs(t)),o=e>>16&255,a=e>>8&255,c=e&255,i=u=>Math.round(u+(r-u)*n);return i(o)<<16|i(a)<<8|i(c)}function J(e){let t=D(e);return t===null?null:[[0,F(t,.6)],[.4,t],[1,F(t,-.6)]]}function w(e,t=r=>r){let r=e.map(([n,o])=>({time:n,value:t(o)}));return r.sort((n,o)=>n.time-o.time),r[0].time!==0&&r.unshift({time:0,value:r[0].value}),r.at(-1).time!==1&&r.push({time:1,value:r.at(-1).value}),r.filter((n,o)=>o===0||n.time>r[o-1].time)}function z([e,t],r){return[e*r,t*r]}var K=Math.PI/180;function _(e,t,r,n,o=null){let a=e?.shape??"circle";if(a==="rect"){let i=(e.width??1)*n,u=(e.height??1)*n;return{x:t-i/2,y:r-u/2,width:i,height:u}}if(a==="ring"){let i=e.inner??.3,u=e.outer??.5;if(o){let d=o/u;i*=d,u=o}return{x:t,y:r,innerRadius:i*n,outerRadius:u*n}}let c=o??e?.radius??.25;return{x:t,y:r,radius:Math.max(1,c*n)}}function P(e){let t=e?.area??{};return t.shape==="ring"?t.outer??.5:t.shape==="rect"?Math.max(t.width??1,t.height??1)/2:t.radius??.25}function X(e,t,{gridPx:r=100,performance:n=1}={}){let o=r/100,a=e.size??1,c=e.speed??1,i=(e.density??1)*n,u=e.color&&J(e.color)||t.color||[[0,"#ffffff"]];return{mode:"effect",area:_(t.area,e.x,e.y,r,e.radius),count:Math.max(1,Math.round(t.count*i)),spawnRate:Math.max(.1,t.rate*i),initial:0,lifetime:t.lifetime,velocity:{x:z(t.velocity?.x??[0,0],o*c),y:z(t.velocity?.y??[0,0],o*c)},scale:{curve:w(t.scale??[[0,.3]],d=>d*a*o)},alpha:{curve:w(t.alpha??[[0,1],[1,0]])},tint:{curve:w(u,d=>D(d)??16777215)},rotation:{alignVelocity:!!t.rotation?.align,spread:(t.rotation?.spread??0)*K,speed:{min:t.rotation?.speed?.[0]??0,max:t.rotation?.speed?.[1]??0}},drift:{enabled:(t.drift??0)>0,intensity:t.drift??0},elevation:e.elevation??0,gravity:{x:(t.gravity?.x??0)*o*c*c,y:(t.gravity?.y??0)*o*c*c},prewarm:Math.max(...[].concat(t.lifetime??[1e3])),gridScale:o,_blend:t.blend??"add",_textures:t.textures?.length?t.textures:["glow"]}}function N(e,t){let{_blend:r,_textures:n,...o}=e,a=globalThis.PIXI?.BLEND_MODES,c=["add","screen","normal"].includes(r)?r:"normal";return o.blend=a?a[c.toUpperCase()]??a.NORMAL:c,o.textures=n.map(i=>t(i)),o}var G=new Map;function Q(e=64,t=64){let r=document.createElement("canvas");return r.width=e,r.height=t,r}function h(e,t,r,n,o){let a=e.createRadialGradient(t,r,0,t,r,n);for(let[c,i]of o)a.addColorStop(c,`rgba(255,255,255,${i})`);return a}var R={glow(e){e.fillStyle=h(e,32,32,32,[[0,1],[.25,.85],[.6,.25],[1,0]]),e.fillRect(0,0,64,64)},ember(e){e.fillStyle=h(e,32,32,32,[[0,1],[.12,1],[.3,.45],[1,0]]),e.fillRect(0,0,64,64)},flame(e){e.save(),e.translate(32,32),e.scale(.7,1),e.fillStyle=h(e,0,6,32,[[0,1],[.35,.7],[.75,.15],[1,0]]),e.beginPath(),e.arc(0,6,28,0,Math.PI*2),e.fill(),e.restore()},smoke(e){let t=[[32,32,26,.5],[22,28,16,.35],[42,26,15,.35],[30,42,14,.3],[40,40,12,.25]];for(let[r,n,o,a]of t)e.fillStyle=h(e,r,n,o,[[0,a],[.6,a*.5],[1,0]]),e.beginPath(),e.arc(r,n,o,0,Math.PI*2),e.fill()},spark(e){e.save(),e.translate(32,32),e.scale(1,.12),e.fillStyle=h(e,0,0,32,[[0,1],[.4,.8],[1,0]]),e.beginPath(),e.arc(0,0,32,0,Math.PI*2),e.fill(),e.restore()},star(e){e.fillStyle=h(e,32,32,32*.35,[[0,1],[1,0]]),e.fillRect(0,0,64,64);for(let r of[0,Math.PI/2])e.save(),e.translate(32,32),e.rotate(r),e.scale(1,.08),e.fillStyle=h(e,0,0,32,[[0,1],[.5,.5],[1,0]]),e.beginPath(),e.arc(0,0,32,0,Math.PI*2),e.fill(),e.restore()},bubble(e){e.strokeStyle="rgba(255,255,255,0.9)",e.lineWidth=3,e.beginPath(),e.arc(32,32,26,0,Math.PI*2),e.stroke(),e.fillStyle="rgba(255,255,255,0.15)",e.fill(),e.fillStyle="rgba(255,255,255,0.8)",e.beginPath(),e.ellipse(23,22,5,3,-.6,0,Math.PI*2),e.fill()},leaf(e){e.fillStyle="rgba(255,255,255,0.95)",e.beginPath(),e.moveTo(32,6),e.quadraticCurveTo(56,32,32,58),e.quadraticCurveTo(8,32,32,6),e.fill(),e.strokeStyle="rgba(0,0,0,0.25)",e.lineWidth=2,e.beginPath(),e.moveTo(32,10),e.lineTo(32,54),e.stroke()},dust(e){e.fillStyle=h(e,32,32,32*.5,[[0,1],[.6,.6],[1,0]]),e.fillRect(0,0,64,64)}},he=Object.keys(R);function q(e){let t=R[e]?e:"glow",r=G.get(t);if(r&&!r.destroyed)return r;let n=Q();return R[t](n.getContext("2d")),r=PIXI.Texture.from(n),G.set(t,r),r}function S(e,t=1){if(typeof e=="number")return{times:Float32Array.of(0),values:[e]};let r=e?.curve;if(!Array.isArray(r)||!r.length){let n=typeof e?.min=="number"?(e.min+(e.max??e.min))/2:t;return{times:Float32Array.of(0),values:[n]}}return{times:Float32Array.from(r,n=>n.time),values:r.map(n=>n.value)}}function H(e,t){let r=0;for(;r<e.length-2&&t>e[r+1];)r++;return r}function g({times:e,values:t},r){if(t.length===1||r<=e[0])return t[0];if(r>=e[e.length-1])return t[t.length-1];let n=H(e,r),o=(r-e[n])/(e[n+1]-e[n]);return t[n]+(t[n+1]-t[n])*o}function T({times:e,values:t},r){if(t.length===1||r<=e[0])return t[0];if(r>=e[e.length-1])return t[t.length-1];let n=H(e,r),o=(r-e[n])/(e[n+1]-e[n]),a=t[n],c=t[n+1],i=u=>{let d=a>>u&255,s=c>>u&255;return Math.round(d+(s-d)*o)};return i(16)<<16|i(8)<<8|i(0)}function b(e,t=Math.random){if(typeof e=="number")return e;let r=Array.isArray(e)?e[0]:e?.min??0,n=Array.isArray(e)?e[1]??r:e?.max??r;return r+(n-r)*t()}var ee=40,te=100,U=Math.PI*2,C=class{constructor(t,{container:r,ticker:n,random:o=Math.random}={}){this.config=t,this.random=o,this.ticker=n??globalThis.PIXI?.Ticker?.shared??null,this.spawnArea={...t.area},this.container=r??new PIXI.Container,this.particles=[],this.pool=[],this._scale=S(t.scale,.3),this._alpha=S(t.alpha,1),this._tint=S(t.tint,16777215),this._accumulator=0,this._stopped=!0,this._attached=!1,this._destroyed=!1,this._tick=()=>this.update(this.ticker.deltaMS)}get liveCount(){return this.particles.length}start(){if(this._destroyed)return;this._stopped=!1;let t=this.config.prewarm??0;for(let r=0;r<t;r+=50)this.update(50);this.ticker&&!this._attached&&(this.ticker.add(this._tick),this._attached=!0)}stop({hard:t=!1}={}){this._stopped=!0,t&&(this._attached&&this.ticker?.remove(this._tick),this._attached=!1,this._destroyed=!0,this.particles.length=0,this.pool.length=0,this.container.destroy?.({children:!0,texture:!1}))}update(t){if(this._destroyed)return;let r=Math.min(Math.max(t,0),te),n=r/1e3,o=this.config;if(!this._stopped){for(this._accumulator+=(o.spawnRate??10)*n;this._accumulator>=1&&this.particles.length<o.count;)this._spawn(),this._accumulator-=1;this.particles.length>=o.count&&(this._accumulator=Math.min(this._accumulator,1))}let a=o.gravity?.x??0,c=o.gravity?.y??0,i=o.drift?.enabled?(o.drift.intensity??0)*ee*(o.gridScale??1):0,u=!!o.rotation?.alignVelocity;for(let d=this.particles.length-1;d>=0;d--){let s=this.particles[d];if(s.age+=r,s.age>=s.life){this._recycle(d);continue}let M=s.age/s.life;if(s.vx+=a*n,s.vy+=c*n,i){let Z=s.phase+s.age*s.wobble;s.vx+=Math.cos(Z)*i*n,s.vy+=Math.sin(Z*1.3)*i*n}s.x+=s.vx*n,s.y+=s.vy*n,s.rotation=u?Math.atan2(s.vy,s.vx):s.rotation+s.spin*n;let B=g(this._scale,M);s.scale.set(B,B),s.alpha=g(this._alpha,M),s.tint=T(this._tint,M)}}_spawn(){let t=this.config,r=this.random,n=t.textures??[],o=n[Math.floor(r()*n.length)]??PIXI.Texture.WHITE,a=this.pool.pop();a?(a.texture=o,a.visible=!0):(a=new PIXI.Sprite(o),a.anchor.set(.5,.5),this.container.addChild(a)),t.blend!==void 0&&(a.blendMode=t.blend);let{x:c,y:i}=this._samplePosition();a.x=c,a.y=i,a.vx=b(t.velocity?.x??0,r),a.vy=b(t.velocity?.y??0,r),a.age=0,a.life=Math.max(1,b(t.lifetime??[1e3,1e3],r)),a.phase=r()*U,a.wobble=.0015+r()*.002;let u=t.rotation??{};a.rotation=(u.initial??0)+(r()*2-1)*(u.spread??0),a.spin=b(u.speed??0,r)*Math.PI/180;let d=g(this._scale,0);return a.scale.set(d,d),a.alpha=g(this._alpha,0),a.tint=T(this._tint,0),this.particles.push(a),a}_recycle(t){let r=this.particles[t],n=this.particles.pop();t<this.particles.length&&(this.particles[t]=n),r.visible=!1,this.pool.push(r)}_samplePosition(){let t=this.spawnArea??{x:0,y:0,radius:0},r=this.random;if("width"in t)return{x:t.x+r()*t.width,y:t.y+r()*t.height};let n=r()*U,o;if("outerRadius"in t){let a=t.innerRadius**2,c=t.outerRadius**2;o=Math.sqrt(a+r()*(c-a))}else o=(t.radius??0)*Math.sqrt(r());return{x:t.x+Math.cos(n)*o,y:t.y+Math.sin(n)*o}}};var j={EMBER:{Controls:{Group:"Ember \u2014 Particules",Place:"Poser un \xE9metteur (clic sur la sc\xE8ne)",Picker:"Choisir l'effet \xE0 poser",List:"\xC9metteurs de la sc\xE8ne",Clear:"Supprimer tous les \xE9metteurs",ClearConfirm:"Supprimer tous les \xE9metteurs de particules de cette sc\xE8ne ?"},Preset:{campfire:"Feu de camp",torch:"Torche",smoke:"Fum\xE9e",embers:"Braises",sparks:"\xC9tincelles",fireflies:"Lucioles",arcane:"Aura arcanique",holy:"Lumi\xE8re sacr\xE9e",poison:"Brume toxique",bubbles:"Bulles",leaves:"Feuilles qui tombent",dust:"Poussi\xE8re en suspension"},Config:{Title:"\xC9metteur de particules",Missing:"Cet \xE9metteur n'existe plus.",Label:"Nom",Preset:"Effet",Enabled:"Actif",Hidden:"Cach\xE9 aux joueurs",HiddenHint:"Seul le MJ voit les particules.",Look:"Apparence",Size:"Taille",Density:"Densit\xE9",Speed:"Vitesse",Radius:"Rayon",Cells:"cases",Color:"Couleur",PresetColors:"couleurs de l'effet",Elevation:"\xC9l\xE9vation",Reset:"Revenir \xE0 la valeur de l'effet",Delete:"Supprimer"},Picker:{Title:"Effet \xE0 poser",Hint:"Choisis un effet, puis clique sur la sc\xE8ne pour le poser."},List:{Title:"\xC9metteurs de la sc\xE8ne",Empty:"Aucun \xE9metteur sur cette sc\xE8ne. Utilise l'outil \xAB Poser un \xE9metteur \xBB.",Pan:"Centrer la vue",Toggle:"Activer / d\xE9sactiver",Edit:"R\xE9glages"},Settings:{Engine:{Name:"Moteur de rendu",Hint:"Moteur Ember : le moteur maison du module, avec gravit\xE9. Foundry : le g\xE9n\xE9rateur de particules int\xE9gr\xE9 \xE0 Foundry v14 (exp\xE9rimental). Le changement s'applique \xE0 tous les joueurs.",Ember:"Ember (maison)",Core:"Foundry (int\xE9gr\xE9, exp\xE9rimental)"},Performance:{Name:"Qualit\xE9 des particules",Hint:"R\xE9duit le nombre de particules affich\xE9es sur cet ordinateur. Utile pour les machines modestes."}},Error:{GMOnly:"Seul le MJ peut modifier les \xE9metteurs.",NoParticleApi:"Ember : le g\xE9n\xE9rateur de particules de Foundry est introuvable. Ember n\xE9cessite Foundry VTT v14."}}};var y=100,ne=j.EMBER.Preset,l={preset:"campfire",x:0,y:0,size:1,density:1,speed:1,radius:null,color:null},A=document.getElementById("stage"),f=new PIXI.Application({resizeTo:A,backgroundAlpha:0,antialias:!0});A.appendChild(f.view);var v=new PIXI.Graphics,E=new PIXI.Graphics;f.stage.addChild(v);var p=null,k=null;function oe(){let{width:e,height:t}=f.screen;v.clear(),v.lineStyle(1,13215610,.08);let r=e/2%y,n=t/2%y;for(let o=r;o<e;o+=y)v.moveTo(o,0).lineTo(o,t);for(let o=n;o<t;o+=y)v.moveTo(0,o).lineTo(e,o)}function O(){let e=m[l.preset],t=(l.radius??P(e))*y;E.clear(),E.lineStyle(1.5,15250538,.35).drawCircle(0,0,t),E.lineStyle(2,15250538,.8).moveTo(-6,0).lineTo(6,0).moveTo(0,-6).lineTo(0,6),E.position.set(l.x,l.y)}function I(){p?.stop({hard:!0}),k=new PIXI.Container,f.stage.addChildAt(k,1);let e=N(X(l,m[l.preset],{gridPx:y}),q);p=new C(e,{container:k,ticker:f.ticker}),p.start(),f.stage.addChild(E),O(),se(e)}function V(e,t){l.x=e,l.y=t;let r=_(m[l.preset].area,e,t,y,l.radius);p&&(p.spawnArea.x=r.x,p.spawnArea.y=r.y),O()}function ae(e){return`linear-gradient(90deg, ${e.color.map(([r,n])=>`${n} ${Math.round(r*100)}%`).join(", ")})`}function ie(){let e=document.getElementById("presets");e.innerHTML=Object.entries(m).map(([t,r])=>`
+      <button type="button" class="preset" data-id="${t}" aria-pressed="${t===l.preset}">
+        <span class="swatch" style="background:${ae(r)}"></span>
+        <span>${ne[t]??t}</span>
+      </button>`).join("")}function se(e){let t=m[l.preset],r=t.gravity?.y??0;document.getElementById("stat-max").textContent=e.count,document.getElementById("stat-rate").textContent=`${Math.round(e.spawnRate)}/s`,document.getElementById("stat-life").textContent=`${(t.lifetime[0]/1e3).toFixed(1)}\u2013${(t.lifetime[1]/1e3).toFixed(1)} s`,document.getElementById("stat-gravity").textContent=r?`${r} px/s\xB2`:"aucune"}function x(){let e=m[l.preset],t=l.radius??P(e);for(let[r,n,o]of[["size",l.size,a=>`${a}\xD7`],["density",l.density,a=>`${a}\xD7`],["speed",l.speed,a=>`${a}\xD7`],["radius",t,a=>`${a} case${a>=2?"s":""}`]])document.getElementById(r).value=n,document.getElementById(`${r}-out`).textContent=o(n);document.getElementById("color").value=l.color??e.color[Math.floor(e.color.length/2)][1],document.getElementById("color-state").textContent=l.color?"couleur impos\xE9e":"couleurs de l'effet";for(let r of document.querySelectorAll(".preset"))r.setAttribute("aria-pressed",r.dataset.id===l.preset)}document.getElementById("presets").addEventListener("click",e=>{let t=e.target.closest(".preset");t&&(l.preset=t.dataset.id,l.radius=null,x(),I())});for(let e of["size","density","speed","radius"]){let t=document.getElementById(e);t.addEventListener("input",()=>{l[e]=Number(t.value),x()}),t.addEventListener("change",I)}document.getElementById("color").addEventListener("input",e=>{l.color=e.target.value,x()});document.getElementById("color").addEventListener("change",I);document.getElementById("color-reset").addEventListener("click",()=>{l.color=null,x(),I()});document.getElementById("burst").addEventListener("click",()=>{for(let e=0;e<60;e++)p?._spawn()});var L=!1,W=e=>{let t=f.view.getBoundingClientRect();V(e.clientX-t.left,e.clientY-t.top)};f.view.addEventListener("pointerdown",e=>{L=!0,f.view.setPointerCapture(e.pointerId),W(e)});f.view.addEventListener("pointermove",e=>L&&W(e));f.view.addEventListener("pointerup",()=>L=!1);setInterval(()=>{document.getElementById("stat-live").textContent=p?.liveCount??0},200);function Y(){oe(),V(Math.round(f.screen.width/2),Math.round(f.screen.height*.62))}new ResizeObserver(Y).observe(A);ie();x();Y();I();})();
+
+</script>

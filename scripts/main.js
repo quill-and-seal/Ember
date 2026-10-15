@@ -25,6 +25,23 @@ Hooks.once("init", () => {
     default: "campfire"
   });
 
+  game.settings.register(MODULE_ID, "engine", {
+    name: "EMBER.Settings.Engine.Name",
+    hint: "EMBER.Settings.Engine.Hint",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      ember: "EMBER.Settings.Engine.Ember",
+      core: "EMBER.Settings.Engine.Core"
+    },
+    default: "ember",
+    onChange: () => {
+      manager.clear();
+      manager.sync();
+    }
+  });
+
   game.settings.register(MODULE_ID, "performance", {
     name: "EMBER.Settings.Performance.Name",
     hint: "EMBER.Settings.Performance.Hint",

@@ -1,9 +1,9 @@
 /**
- * Traduit un émetteur Ember (preset + réglages) en configuration pour
+ * Traduit un émetteur Ember (preset + réglages) en configuration de particules,
+ * comprise à la fois par le moteur maison (engine/particle-system.js) et par
  * foundry.canvas.animation.ParticleGenerator (API intégrée à Foundry v14).
  *
- * Toute la dépendance à l'API du cœur est concentrée ici : si Foundry change
- * le format de configuration, c'est le seul fichier à adapter.
+ * Toute la dépendance au format de configuration est concentrée ici.
  * Les fonctions de calcul sont pures (sans dépendance à Foundry) pour être testables.
  */
 
@@ -145,19 +145,37 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     },
     drift: { enabled: (preset.drift ?? 0) > 0, intensity: preset.drift ?? 0 },
     elevation: emitter.elevation ?? 0,
+    // Options propres au moteur maison (retirées pour le générateur de Foundry).
+    // La gravité suit le carré de la vitesse pour garder la même trajectoire.
+    gravity: {
+      x: (preset.gravity?.x ?? 0) * g * speed * speed,
+      y: (preset.gravity?.y ?? 0) * g * speed * speed
+    },
+    prewarm: Math.max(...[].concat(preset.lifetime ?? [1000])),
+    gridScale: g,
     _blend: preset.blend ?? "add",
     _textures: preset.textures?.length ? preset.textures : ["glow"]
   };
 }
 
-/** Ajoute ce qui dépend de PIXI : textures et mode de fusion. */
+/** Clés comprises uniquement par le moteur maison. */
+const EMBER_ONLY_KEYS = ["gravity", "prewarm", "gridScale"];
+
+/** Ajoute ce qui dépend de PIXI : textures et mode de fusion (PIXI 7 : nombres, PIXI 8 : chaînes). */
 export function finalizeConfig(cfg, getTexture) {
   const { _blend, _textures, ...rest } = cfg;
-  const modes = globalThis.PIXI?.BLEND_MODES ?? {};
-  const blend = { add: modes.ADD, screen: modes.SCREEN, normal: modes.NORMAL }[_blend] ?? modes.NORMAL;
+  const modes = globalThis.PIXI?.BLEND_MODES;
+  const name = ["add", "screen", "normal"].includes(_blend) ? _blend : "normal";
+  rest.blend = modes ? modes[name.toUpperCase()] ?? modes.NORMAL : name;
   rest.textures = _textures.map((id) => getTexture(id));
-  if (blend !== undefined) rest.blend = blend;
   return rest;
+}
+
+/** Configuration pour le générateur de Foundry : sans les options du moteur maison. */
+export function toCoreConfig(cfg) {
+  const out = { ...cfg };
+  for (const key of EMBER_ONLY_KEYS) delete out[key];
+  return out;
 }
 
 /**

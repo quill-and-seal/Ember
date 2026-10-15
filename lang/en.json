@@ -54,6 +54,12 @@
       "Edit": "Settings"
     },
     "Settings": {
+      "Engine": {
+        "Name": "Rendering engine",
+        "Hint": "Ember engine: the module's own engine, with gravity. Foundry: the particle generator built into Foundry v14 (experimental). Applies to every player.",
+        "Ember": "Ember (built-in to the module)",
+        "Core": "Foundry (core, experimental)"
+      },
       "Performance": {
         "Name": "Particle quality",
         "Hint": "Reduces how many particles are drawn on this computer. Useful for modest machines."

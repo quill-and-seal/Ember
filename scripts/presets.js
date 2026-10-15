@@ -19,6 +19,7 @@
  *   blend     "add" (lumineux), "screen" ou "normal"
  *   rotation  { spread: degrés, speed: [min, max] en degrés/s, align: suit la direction }
  *   drift     Intensité de la dérive aléatoire (0 = aucune)
+ *   gravity   { x, y } en px/s² (moteur maison uniquement, ignoré par le générateur de Foundry)
  */
 
 export const PRESETS = {
@@ -30,8 +31,8 @@ export const PRESETS = {
     rate: 70,
     lifetime: [700, 1300],
     velocity: { x: [-12, 12], y: [-90, -45] },
-    scale: [[0, 0.9], [0.5, 0.5], [1, 0.15]],
-    alpha: [[0, 0], [0.12, 0.9], [1, 0]],
+    scale: [[0, 0.7], [0.5, 0.45], [1, 0.12]],
+    alpha: [[0, 0], [0.12, 0.65], [1, 0]],
     color: [[0, "#fff2b0"], [0.3, "#ffae3d"], [0.65, "#ff5a1f"], [1, "#5a1e0a"]],
     blend: "add",
     rotation: { spread: 20, speed: [-20, 20] },
@@ -46,8 +47,8 @@ export const PRESETS = {
     rate: 40,
     lifetime: [500, 900],
     velocity: { x: [-6, 6], y: [-70, -35] },
-    scale: [[0, 0.5], [0.5, 0.3], [1, 0.08]],
-    alpha: [[0, 0], [0.1, 0.9], [1, 0]],
+    scale: [[0, 0.45], [0.5, 0.28], [1, 0.08]],
+    alpha: [[0, 0], [0.1, 0.7], [1, 0]],
     color: [[0, "#fff4c2"], [0.35, "#ffb347"], [0.7, "#ff6224"], [1, "#4a1806"]],
     blend: "add",
     rotation: { spread: 15, speed: [-15, 15] },
@@ -83,7 +84,8 @@ export const PRESETS = {
     color: [[0, "#ffd27a"], [0.5, "#ff6a1a"], [1, "#a01e00"]],
     blend: "add",
     rotation: { spread: 0, speed: [0, 0] },
-    drift: 0.6
+    drift: 0.6,
+    gravity: { x: 0, y: 6 }
   },
 
   sparks: {
@@ -94,12 +96,13 @@ export const PRESETS = {
     rate: 30,
     lifetime: [300, 700],
     velocity: { x: [-140, 140], y: [-160, 20] },
-    scale: [[0, 0.35], [1, 0.1]],
+    scale: [[0, 0.55], [1, 0.2]],
     alpha: [[0, 1], [1, 0]],
     color: [[0, "#ffffff"], [0.4, "#ffd37a"], [1, "#ff7b1c"]],
     blend: "add",
     rotation: { spread: 0, speed: [0, 0], align: true },
-    drift: 0
+    drift: 0,
+    gravity: { x: 0, y: 320 }
   },
 
   fireflies: {

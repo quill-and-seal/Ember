@@ -54,6 +54,12 @@
       "Edit": "Réglages"
     },
     "Settings": {
+      "Engine": {
+        "Name": "Moteur de rendu",
+        "Hint": "Moteur Ember : le moteur maison du module, avec gravité. Foundry : le générateur de particules intégré à Foundry v14 (expérimental). Le changement s'applique à tous les joueurs.",
+        "Ember": "Ember (maison)",
+        "Core": "Foundry (intégré, expérimental)"
+      },
       "Performance": {
         "Name": "Qualité des particules",
         "Hint": "Réduit le nombre de particules affichées sur cet ordinateur. Utile pour les machines modestes."

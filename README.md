@@ -2,7 +2,14 @@
 
 Effets de particules pour **Foundry VTT v14** : feux de camp, torches, fumée, braises, étincelles, lucioles, auras magiques… Le MJ les pose sur la scène, et tous les joueurs les voient.
 
-Ember s'appuie sur le générateur de particules intégré à Foundry v14 (`foundry.canvas.animation.ParticleGenerator`) : rendu natif, élévation et ordre d'affichage gérés par le cœur, aucune image à télécharger.
+Ember a deux moteurs de rendu, au choix du MJ dans les réglages du module (« Moteur de rendu ») :
+
+- **Ember (maison, par défaut)** : le moteur du module, avec gravité et préchauffage (un feu est déjà « pris » quand la scène s'ouvre). Il ne dépend que des bases de PIXI.
+- **Foundry (expérimental)** : le générateur intégré à Foundry v14 (`foundry.canvas.animation.ParticleGenerator`).
+
+Les deux lisent les mêmes presets. Aucune image à télécharger : les textures sont générées à la volée.
+
+**Aperçu sans Foundry** : `docs/preview.html` fait tourner le moteur maison et les presets dans un navigateur. Pour le régénérer : `npm install && npm run build:preview`.
 
 Un module de l'atelier [Quill & Seal](https://github.com/quill-and-seal).
 

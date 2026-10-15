@@ -1,0 +1,253 @@
+<title>Ember Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Mise en page : une scène sombre façon table de jeu à gauche, l'établi de réglages à droite (empilés sur mobile).
+     Look volontairement unique et sombre : les particules lumineuses se lisent sur un fond nocturne. */
+  :root {
+    --night: #120e0b;
+    --stone: #1d1712;
+    --panel: #241c16;
+    --line: #3a2e24;
+    --text: #efe3d1;
+    --muted: #a8937a;
+    --flame: #e8a34f;
+    --flame-hot: #ffd27a;
+    --font-display: "IM Fell English SC", "Georgia", serif;
+    --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "Consolas", monospace;
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; }
+  body {
+    background: var(--night);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+  }
+
+  .shell {
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+
+  .stage {
+    position: relative;
+    min-width: 0;
+    min-height: 320px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 65%, #2a1f17 0%, transparent 60%),
+      var(--stone);
+    cursor: crosshair;
+    touch-action: none;
+  }
+  .stage canvas { display: block; }
+
+  .stage-label {
+    position: absolute;
+    left: max(16px, env(safe-area-inset-left, 0px));
+    bottom: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .bench {
+    min-width: 0;
+    overflow-y: auto;
+    background: var(--panel);
+    border-left: 1px solid var(--line);
+    padding-block: 20px 28px;
+    padding-left: 20px;
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  header h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 34px;
+    line-height: 1;
+    color: var(--flame-hot);
+    letter-spacing: 0.02em;
+    text-wrap: balance;
+  }
+  header p {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  h2 {
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .preset {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 9px;
+    text-align: left;
+    font: inherit;
+    font-size: 13px;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .preset:hover { border-color: var(--muted); }
+  .preset[aria-pressed="true"] {
+    border-color: var(--flame);
+    background: rgba(232, 163, 79, 0.1);
+  }
+  .preset:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--flame-hot);
+    outline-offset: 2px;
+  }
+  .swatch {
+    display: block;
+    height: 4px;
+    border-radius: 2px;
+  }
+
+  .control {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) 70px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .control output {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-align: right;
+    color: var(--flame-hot);
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--flame); }
+
+  .color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .color-row input[type="color"] {
+    width: 40px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: none;
+  }
+
+  .ghost {
+    font: inherit;
+    font-size: 13px;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .ghost:hover { border-color: var(--flame); color: var(--flame-hot); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 14px;
+    margin: 0;
+    font-size: 13px;
+  }
+  .stats dt { color: var(--muted); }
+  .stats dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  footer { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  @media (max-width: 760px) {
+    .shell {
+      grid-template-columns: 1fr;
+      grid-template-rows: 55vh auto;
+      height: auto;
+    }
+    .bench { border-left: 0; border-top: 1px solid var(--line); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  }
+</style>
+
+<div class="shell">
+  <div class="stage" id="stage">
+    <div class="stage-label">Clique ou glisse pour déplacer l'émetteur · 1 case = 100 px</div>
+  </div>
+
+  <aside class="bench">
+    <header>
+      <h1>Ember</h1>
+      <p>Aperçu du moteur de particules maison du module Foundry VTT, avec les presets réels de la branche <code>moteur-maison</code>.</p>
+    </header>
+
+    <section>
+      <h2>Effet</h2>
+      <div class="presets" id="presets"></div>
+    </section>
+
+    <section>
+      <h2>Réglages de l'émetteur</h2>
+      <label class="control"><span>Taille</span><input type="range" id="size" min="0.25" max="4" step="0.05"><output id="size-out"></output></label>
+      <label class="control"><span>Densité</span><input type="range" id="density" min="0.1" max="3" step="0.05"><output id="density-out"></output></label>
+      <label class="control"><span>Vitesse</span><input type="range" id="speed" min="0.25" max="3" step="0.05"><output id="speed-out"></output></label>
+      <label class="control"><span>Rayon</span><input type="range" id="radius" min="0.05" max="3" step="0.05"><output id="radius-out"></output></label>
+      <div class="color-row">
+        <input type="color" id="color" aria-label="Couleur">
+        <span id="color-state">couleurs de l'effet</span>
+        <button type="button" class="ghost" id="color-reset">Couleurs d'origine</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Moteur</h2>
+      <dl class="stats">
+        <dt>Particules vivantes</dt><dd id="stat-live">0</dd>
+        <dt>Maximum</dt><dd id="stat-max">0</dd>
+        <dt>Débit</dt><dd id="stat-rate">0</dd>
+        <dt>Durée de vie</dt><dd id="stat-life">0</dd>
+        <dt>Gravité</dt><dd id="stat-gravity">aucune</dd>
+      </dl>
+      <p style="margin:12px 0 0"><button type="button" class="ghost" id="burst">Gerbe de 60 particules</button></p>
+    </section>
+
+    <footer>Quill &amp; Seal · Les réglages appliqués ici sont ceux de la fenêtre « Émetteur de particules » dans Foundry.</footer>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+<script>
+/*__BUNDLE__*/
+</script>
