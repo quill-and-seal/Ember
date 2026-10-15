@@ -15,11 +15,18 @@ Un module de l'atelier [Quill & Seal](https://github.com/quill-and-seal).
 
 ## Installation
 
-Dans Foundry, **Modules complémentaires → Installer un module**, puis colle ce lien de manifeste :
+Dans Foundry, **Modules complémentaires → Installer un module**, puis colle l'un de ces liens de manifeste :
 
-```
-https://github.com/quill-and-seal/Ember/releases/latest/download/module.json
-```
+- **Version stable** (générateur de Foundry) :
+  ```
+  https://github.com/quill-and-seal/Ember/releases/latest/download/module.json
+  ```
+- **Variante moteur maison** (vue du dessus, vent, lumière adaptative) :
+  ```
+  https://github.com/quill-and-seal/Ember/releases/download/va0.1.0/module.json
+  ```
+
+Les deux ont le même identifiant (`ember-particles`) : installer l'une remplace l'autre, et les émetteurs déjà posés restent valables.
 
 ## Utilisation
 
