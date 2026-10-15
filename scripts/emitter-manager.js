@@ -141,8 +141,8 @@ export class EmitterManager {
     for (const [id, entry] of this.#active) {
       const emitter = emitters[id];
       if (!emitter || typeof entry.generator.setWind !== "function") continue;
-      const { wind, gust } = computeWind(emitter, getPreset(emitter.preset), sceneWind, { gridPx: canvas.dimensions.size });
-      entry.generator.setWind(wind, gust);
+      const { wind, gust, airflow } = computeWind(emitter, getPreset(emitter.preset), sceneWind, { gridPx: canvas.dimensions.size });
+      entry.generator.setWind(wind, gust, airflow);
     }
   }
 

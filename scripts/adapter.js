@@ -126,9 +126,12 @@ export function computeWind(emitter, preset, sceneWind, { gridPx = REFERENCE_GRI
   if (sceneWind?.enabled) {
     const k = (preset.windFactor ?? 1) * (emitter.windFactor ?? 1) * g;
     const v = windVector(sceneWind.direction ?? 0, (sceneWind.strength ?? 0) * k);
-    return { wind: v, gust: sceneWind.gusts ?? 0 };
+    // Courant d'air ressenti par l'effet (100 = vent fort), atténué si l'émetteur est abrité.
+    const airflow = ((sceneWind.strength ?? 0) / 100) * (emitter.windFactor ?? 1);
+    return { wind: v, gust: sceneWind.gusts ?? 0, airflow };
   }
   return {
+    airflow: 0,
     wind: { x: (preset.wind?.x ?? 0) * g * speed, y: (preset.wind?.y ?? 0) * g * speed },
     gust: 0
   };
@@ -183,6 +186,8 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     swirl: scaleRange(preset.swirl ?? [0, 0], speed),
     wind: air.wind,
     gust: air.gust,
+    airflow: air.airflow,
+    windEffects: preset.windEffects ?? null,
     drag: (preset.drag ?? 0) * speed,
     height: scaleRange(preset.height ?? [0, 0], g),
     lift: scaleRange(preset.lift ?? [0, 0], g * speed),
@@ -202,7 +207,7 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
 
 /** Clés comprises uniquement par le moteur maison. */
 const EMBER_ONLY_KEYS = [
-  "radial", "swirl", "wind", "gust", "drag", "height", "lift", "fall",
+  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "drag", "height", "lift", "fall",
   "groundFade", "perspective", "gravity", "prewarm", "gridScale"
 ];
 
@@ -231,6 +236,17 @@ export function toCoreConfig(cfg) {
       x: [cfg.velocity.x[0] - r + wx, cfg.velocity.x[1] + r + wx],
       y: [cfg.velocity.y[0] - r + wy, cfg.velocity.y[1] + r + wy]
     };
+  }
+  // Réactions au vent figées à la création (pas de rafales ni de mise à jour en direct).
+  const fx = cfg.windEffects;
+  const a = Math.min(1.5, cfg.airflow ?? 0);
+  if (fx && a > 0) {
+    const m = (key) => (fx[key] === undefined ? 1 : Math.max(0.05, 1 + (fx[key] - 1) * a));
+    out.count = Math.max(1, Math.round(out.count * m("count")));
+    out.spawnRate = out.spawnRate * m("rate");
+    if (Array.isArray(out.lifetime)) out.lifetime = out.lifetime.map((v) => v * m("life"));
+    if (out.scale?.curve) out.scale = { curve: out.scale.curve.map((p) => ({ ...p, value: p.value * m("scale") })) };
+    if (out.alpha?.curve) out.alpha = { curve: out.alpha.curve.map((p) => ({ ...p, value: Math.min(1, p.value * m("alpha")) })) };
   }
   for (const key of EMBER_ONLY_KEYS) delete out[key];
   return out;

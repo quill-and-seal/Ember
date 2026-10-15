@@ -12,6 +12,7 @@ import fr from "../lang/fr.json";
 
 const GRID = 100;
 const LABELS = fr.EMBER.Preset;
+const BEHAVIOR = fr.EMBER.WindBehavior;
 
 const state = {
   preset: "campfire",
@@ -76,8 +77,9 @@ function rebuild() {
 
 /** Applique le vent en direct, comme le fait le module dans Foundry. */
 function applyWind() {
-  const { wind: v, gust } = computeWind(state, PRESETS[state.preset], wind, { gridPx: GRID });
-  system?.setWind(v, gust);
+  const { wind: v, gust, airflow } = computeWind(state, PRESETS[state.preset], wind, { gridPx: GRID });
+  system?.setWind(v, gust, airflow);
+  document.getElementById("wind-behavior").textContent = BEHAVIOR[state.preset] ?? "—";
   document.getElementById("wind-arrow").style.setProperty("--deg", `${wind.direction}deg`);
   document.getElementById("wind-dir-out").textContent = `${wind.direction}°`;
   document.getElementById("wind-strength-out").textContent = wind.strength;
@@ -208,9 +210,12 @@ app.view.addEventListener("pointerdown", (e) => {
 app.view.addEventListener("pointermove", (e) => dragging && pointer(e));
 app.view.addEventListener("pointerup", () => (dragging = false));
 
-// Compteur de particules vivantes
+// Compteur de particules vivantes et intensité ressentie (rafales comprises)
 setInterval(() => {
   document.getElementById("stat-live").textContent = system?.liveCount ?? 0;
+  const r = system?._react;
+  document.getElementById("wind-live").textContent =
+    wind.enabled && r ? `débit ${r.rate.toFixed(2)}× · taille ${r.scale.toFixed(2)}× · vie ${r.life.toFixed(2)}×` : "calme";
 }, 200);
 
 // Démarrage

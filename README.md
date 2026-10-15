@@ -33,7 +33,12 @@ Sur un émetteur posé :
 - **Glisser** la pastille pour le déplacer (maintiens **Maj** pour l'aimanter au centre d'une case).
 - **Clic droit** ou **double-clic** pour ouvrir ses réglages : effet, taille, densité, vitesse, rayon, couleur, élévation, actif, caché aux joueurs.
 
-L'outil **Vent de la scène** règle un vent qui pousse tous les effets de la scène : direction (rose des vents), force et rafales. Chaque effet y réagit à sa façon (la fumée et les feuilles s'envolent, le feu se couche à peine, la magie l'ignore), et chaque émetteur a un curseur « Sensibilité au vent ». Avec le moteur maison, le vent change en direct, sans relancer les effets.
+L'outil **Vent de la scène** règle un vent qui pousse tous les effets de la scène : direction (rose des vents), force et rafales. Le vent agit de deux façons :
+
+- **il déplace** les particules : la fumée et les feuilles s'envolent, le feu se couche à peine, la magie l'ignore ;
+- **il change le comportement** des effets : un feu s'attise (plus de flammes, plus hautes et plus vives), les braises s'arrachent en masse, la fumée et la brume se dissipent plus vite, les lucioles se cachent, la poussière se soulève. Les rafales font varier ces réactions : le feu se ravive à chaque coup de vent.
+
+Chaque émetteur a un curseur « Sensibilité au vent » (0 = abrité, ni déplacé ni attisé). Avec le moteur maison, tout change en direct, sans relancer les effets ; le générateur de Foundry fige la réaction au moment où l'effet est créé.
 
 L'outil **Émetteurs de la scène** liste tous les émetteurs : centrer la vue, activer/désactiver, régler, supprimer.
 

@@ -13,6 +13,10 @@
  *   - wind      vent { x, y } en px/s, modifiable en direct avec setWind()
  *   - gust      rafales (0..1) : la force du vent ondule dans le temps, en phase
  *               pour tous les émetteurs (même horloge), comme un vrai coup de vent
+ *   - airflow   force du courant d'air ressenti (0 = calme, 1 = vent fort), rafales incluses
+ *   - windEffects  comment l'effet RÉAGIT au courant d'air : multiplicateurs atteints à airflow = 1
+ *               { rate, count, scale, life, alpha, lift }. Un feu s'attise (rate, scale > 1),
+ *               une fumée se dissipe (life < 1), des lucioles se cachent (rate < 1)…
  *   - drag      frottement (par seconde) qui freine l'élan, dans le plan et en hauteur
  *   - drift     dérive aléatoire ondulante
  * En hauteur :
@@ -78,9 +82,22 @@ export class EmberParticleSystem {
    * @param {{x: number, y: number}} wind  px/s
    * @param {number} [gust]                rafales 0..1
    */
-  setWind(wind, gust = this.config.gust ?? 0) {
+  setWind(wind, gust = this.config.gust ?? 0, airflow = this.config.airflow ?? 0) {
     this.config.wind = { x: wind?.x ?? 0, y: wind?.y ?? 0 };
     this.config.gust = gust;
+    this.config.airflow = airflow;
+  }
+
+  /**
+   * Multiplicateurs de comportement pour le courant d'air actuel.
+   * Interpolation linéaire entre 1 (calme) et la valeur du preset (vent fort),
+   * prolongée jusqu'à 1,5× pour les tempêtes, jamais sous 5 %.
+   */
+  _windResponse(gustFactor) {
+    const fx = this.config.windEffects;
+    const a = Math.min(1.5, (this.config.airflow ?? 0) * gustFactor);
+    const m = (key) => (fx?.[key] === undefined ? 1 : Math.max(0.05, 1 + (fx[key] - 1) * a));
+    return { rate: m("rate"), count: m("count"), scale: m("scale"), life: m("life"), alpha: m("alpha"), lift: m("lift") };
   }
 
   /** Multiplicateur de rafale à l'instant présent (horloge partagée par tous les émetteurs). */
@@ -147,20 +164,25 @@ export class EmberParticleSystem {
     const dt = ms / 1000;
     const cfg = this.config;
 
+    // Courant d'air de cet instant : il pousse les particules et change le comportement de l'effet
+    const gustFactor = this._gustFactor();
+    const react = this._windResponse(gustFactor);
+    this._react = react;
+
     // Apparitions
     if (!this._stopped) {
-      this._accumulator += (cfg.spawnRate ?? 10) * dt;
-      while (this._accumulator >= 1 && this.particles.length < cfg.count) {
+      const maxCount = cfg.count * react.count;
+      this._accumulator += (cfg.spawnRate ?? 10) * react.rate * dt;
+      while (this._accumulator >= 1 && this.particles.length < maxCount) {
         this._spawn();
         this._accumulator -= 1;
       }
-      if (this.particles.length >= cfg.count) this._accumulator = Math.min(this._accumulator, 1);
+      if (this.particles.length >= maxCount) this._accumulator = Math.min(this._accumulator, 1);
     }
 
     // Paramètres communs à toutes les particules pour ce pas
     const gx = cfg.gravity?.x ?? 0;
     const gy = cfg.gravity?.y ?? 0;
-    const gustFactor = this._gustFactor();
     const windX = (cfg.wind?.x ?? 0) * gustFactor;
     const windY = (cfg.wind?.y ?? 0) * gustFactor;
     const fall = cfg.fall ?? 0;
@@ -224,9 +246,9 @@ export class EmberParticleSystem {
       }
 
       // Apparence : la courbe de taille, agrandie par la hauteur
-      const s = sampleCurve(this._scale, t) * (1 + p.z / perspective);
+      const s = sampleCurve(this._scale, t) * (1 + p.z / perspective) * react.scale;
       p.scale.set(s, s);
-      p.alpha = sampleCurve(this._alpha, t);
+      p.alpha = Math.min(1, sampleCurve(this._alpha, t) * react.alpha);
       p.tint = sampleColor(this._tint, t);
     }
   }
@@ -273,11 +295,12 @@ export class EmberParticleSystem {
 
     // Hauteur
     p.z = Math.max(0, sampleRange(cfg.height ?? 0, rand));
-    p.vz = sampleRange(cfg.lift ?? 0, rand);
+    const react = this._react ?? this._windResponse(1);
+    p.vz = sampleRange(cfg.lift ?? 0, rand) * react.lift;
     p.grounded = false;
 
     p.age = 0;
-    p.life = Math.max(1, sampleRange(cfg.lifetime ?? [1000, 1000], rand));
+    p.life = Math.max(1, sampleRange(cfg.lifetime ?? [1000, 1000], rand) * react.life);
     p.phase = rand() * TAU;
     p.wobble = 0.0015 + rand() * 0.002;
 
@@ -287,9 +310,9 @@ export class EmberParticleSystem {
     if (rot.alignVelocity && (p.vx || p.vy)) p.rotation = Math.atan2(p.vy, p.vx);
 
     const perspective = cfg.perspective ?? DEFAULT_PERSPECTIVE;
-    const s = sampleCurve(this._scale, 0) * (1 + p.z / perspective);
+    const s = sampleCurve(this._scale, 0) * (1 + p.z / perspective) * react.scale;
     p.scale.set(s, s);
-    p.alpha = sampleCurve(this._alpha, 0);
+    p.alpha = Math.min(1, sampleCurve(this._alpha, 0) * react.alpha);
     p.tint = sampleColor(this._tint, 0);
 
     this.particles.push(p);

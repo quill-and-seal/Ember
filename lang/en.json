@@ -42,7 +42,8 @@
       "Elevation": "Elevation",
       "Reset": "Reset to the effect's value",
       "Delete": "Delete",
-      "WindFactor": "Wind sensitivity"
+      "WindFactor": "Wind sensitivity",
+      "WindReaction": "Wind reaction"
     },
     "Picker": {
       "Title": "Effect to place",
@@ -88,6 +89,20 @@
         "O": "W",
         "NO": "NW"
       }
+    },
+    "WindBehavior": {
+      "campfire": "flares up: more, taller, brighter flames",
+      "torch": "brightens and flickers",
+      "smoke": "clears faster",
+      "embers": "tears off many more embers",
+      "sparks": "slightly more sparks",
+      "fireflies": "hide",
+      "arcane": "none, it's magic",
+      "holy": "none",
+      "poison": "disperses",
+      "bubbles": "pop faster",
+      "leaves": "tears off many more leaves",
+      "dust": "stirs up dust"
     }
   }
 }

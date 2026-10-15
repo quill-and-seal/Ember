@@ -131,6 +131,7 @@ export class EmitterConfig extends EmberApp {
         ${range("density", 0.1, 3, 0.05, e.density)}
         ${range("speed", 0.25, 3, 0.05, e.speed)}
         ${range("windFactor", 0, 2, 0.05, e.windFactor)}
+        <p class="hint ember-wind-reaction"><i class="fa-solid fa-wind"></i> ${t("Config.WindReaction")} : ${esc(game.i18n.has(`EMBER.WindBehavior.${e.preset}`) ? game.i18n.localize(`EMBER.WindBehavior.${e.preset}`) : "—")}</p>
         <div class="form-group">
           <label>${t("Config.Radius")}</label>
           <div class="form-fields ember-range">

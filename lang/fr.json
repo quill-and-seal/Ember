@@ -42,7 +42,8 @@
       "Elevation": "Élévation",
       "Reset": "Revenir à la valeur de l'effet",
       "Delete": "Supprimer",
-      "WindFactor": "Sensibilité au vent"
+      "WindFactor": "Sensibilité au vent",
+      "WindReaction": "Réaction au vent"
     },
     "Picker": {
       "Title": "Effet à poser",
@@ -88,6 +89,20 @@
         "O": "O",
         "NO": "NO"
       }
+    },
+    "WindBehavior": {
+      "campfire": "s'attise : plus de flammes, plus hautes et plus vives",
+      "torch": "s'avive et vacille",
+      "smoke": "se dissipe plus vite",
+      "embers": "arrache beaucoup plus de braises",
+      "sparks": "un peu plus d'étincelles",
+      "fireflies": "se cachent",
+      "arcane": "aucune, c'est de la magie",
+      "holy": "aucune",
+      "poison": "se disperse",
+      "bubbles": "éclatent plus vite",
+      "leaves": "arrache bien plus de feuilles",
+      "dust": "soulève la poussière"
     }
   }
 }
