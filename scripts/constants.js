@@ -7,6 +7,22 @@ export const LAYER_NAME = "ember";
 /** Clé du flag de scène qui contient les émetteurs. */
 export const FLAG_EMITTERS = "emitters";
 
+/** Clé du flag de scène qui contient le vent. */
+export const FLAG_WIND = "wind";
+
+/**
+ * Vent de scène par défaut.
+ * direction : vers où souffle le vent, en degrés (0 = vers le haut de la carte, 90 = vers la droite).
+ * strength  : force en px/s pour une case de 100 px.
+ * gusts     : intensité des rafales (0 = vent régulier, 1 = très irrégulier).
+ */
+export const WIND_DEFAULTS = Object.freeze({
+  enabled: false,
+  direction: 90,
+  strength: 30,
+  gusts: 0.3
+});
+
 /**
  * Taille de case de référence pour laquelle les presets sont écrits.
  * Rayons, vitesses et tailles sont mis à l'échelle selon la taille de case de la scène.
@@ -26,7 +42,8 @@ export const EMITTER_DEFAULTS = Object.freeze({
   speed: 1,
   radius: null,
   color: null,
-  elevation: 0
+  elevation: 0,
+  windFactor: 1
 });
 
 /** Log préfixé. */

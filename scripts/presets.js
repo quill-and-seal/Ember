@@ -28,7 +28,8 @@
  *   velocity    Vitesse aléatoire { x: [min, max], y: [min, max] } en px/s
  *   radial      Élan qui s'éloigne du centre [min, max] en px/s
  *   swirl       Tourbillon autour du centre [min, max] en degrés/s
- *   wind        Vent constant { x, y } en px/s
+ *   wind        Brise propre à l'effet { x, y } en px/s, quand la scène n'a pas de vent
+ *   windFactor  Sensibilité au vent de scène (0 = insensible, 1 = suit le vent, >1 = s'envole)
  *   drag        Frottement par seconde (0 = aucun)
  *
  *   En hauteur (moteur maison uniquement) :
@@ -41,6 +42,7 @@
 export const PRESETS = {
   campfire: {
     icon: "fa-solid fa-fire",
+    windFactor: 0.35,
     textures: ["flame", "glow"],
     area: { shape: "circle", radius: 0.2 },
     count: 110,
@@ -59,6 +61,7 @@ export const PRESETS = {
 
   torch: {
     icon: "fa-solid fa-fire-flame-simple",
+    windFactor: 0.3,
     textures: ["flame", "glow"],
     area: { shape: "circle", radius: 0.06 },
     count: 45,
@@ -77,6 +80,7 @@ export const PRESETS = {
 
   smoke: {
     icon: "fa-solid fa-smog",
+    windFactor: 1,
     textures: ["smoke"],
     area: { shape: "circle", radius: 0.15 },
     count: 40,
@@ -96,6 +100,7 @@ export const PRESETS = {
 
   embers: {
     icon: "fa-solid fa-fire-flame-curved",
+    windFactor: 0.8,
     textures: ["ember"],
     area: { shape: "circle", radius: 0.25 },
     count: 40,
@@ -116,6 +121,7 @@ export const PRESETS = {
 
   sparks: {
     icon: "fa-solid fa-bolt",
+    windFactor: 0.2,
     textures: ["spark"],
     area: { shape: "circle", radius: 0.04 },
     count: 70,
@@ -123,9 +129,9 @@ export const PRESETS = {
     lifetime: [600, 1100],
     velocity: { x: [0, 0], y: [0, 0] },
     radial: [70, 170],
-    drag: 1.2,
-    lift: [60, 150],
-    fall: 420,
+    drag: 0.8,
+    lift: [140, 280],
+    fall: 500,
     groundFade: 150,
     scale: [[0, 0.5], [1, 0.2]],
     alpha: [[0, 1], [0.7, 1], [1, 0]],
@@ -137,6 +143,7 @@ export const PRESETS = {
 
   fireflies: {
     icon: "fa-solid fa-bug",
+    windFactor: 0.3,
     textures: ["glow"],
     area: { shape: "circle", radius: 1.5 },
     count: 25,
@@ -155,6 +162,7 @@ export const PRESETS = {
 
   arcane: {
     icon: "fa-solid fa-wand-sparkles",
+    windFactor: 0,
     textures: ["star", "glow"],
     area: { shape: "ring", inner: 0.3, outer: 0.5 },
     count: 50,
@@ -173,6 +181,7 @@ export const PRESETS = {
 
   holy: {
     icon: "fa-solid fa-sun",
+    windFactor: 0.15,
     textures: ["glow", "star"],
     area: { shape: "circle", radius: 0.35 },
     count: 45,
@@ -191,6 +200,7 @@ export const PRESETS = {
 
   poison: {
     icon: "fa-solid fa-skull-crossbones",
+    windFactor: 0.9,
     textures: ["smoke"],
     area: { shape: "circle", radius: 0.5 },
     count: 30,
@@ -210,6 +220,7 @@ export const PRESETS = {
 
   bubbles: {
     icon: "fa-solid fa-circle-dot",
+    windFactor: 0.6,
     textures: ["bubble"],
     area: { shape: "circle", radius: 0.3 },
     count: 20,
@@ -227,6 +238,7 @@ export const PRESETS = {
 
   leaves: {
     icon: "fa-solid fa-leaf",
+    windFactor: 1.3,
     textures: ["leaf"],
     area: { shape: "circle", radius: 1.2 },
     count: 15,
@@ -247,6 +259,7 @@ export const PRESETS = {
 
   dust: {
     icon: "fa-solid fa-wind",
+    windFactor: 1,
     textures: ["dust"],
     area: { shape: "circle", radius: 1.2 },
     count: 40,

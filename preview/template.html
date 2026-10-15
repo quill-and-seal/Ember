@@ -192,6 +192,52 @@
 
   footer { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
+  .toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 10px; cursor: pointer; }
+  .toggle input { accent-color: var(--flame); width: 16px; height: 16px; }
+  .wind { display: flex; flex-direction: column; gap: 6px; transition: opacity 0.2s; }
+  .wind.off { opacity: 0.45; }
+  .wind-rose {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 6px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .wind-rose span { position: absolute; }
+  .wind-rose .n { top: 3px; left: 50%; transform: translateX(-50%); }
+  .wind-rose .s { bottom: 3px; left: 50%; transform: translateX(-50%); }
+  .wind-rose .e { right: 5px; top: 50%; transform: translateY(-50%); }
+  .wind-rose .o { left: 5px; top: 50%; transform: translateY(-50%); }
+  .wind-arrow {
+    --deg: 90deg;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 3px;
+    height: 56px;
+    margin: -28px 0 0 -1.5px;
+    background: linear-gradient(to top, transparent, var(--flame));
+    border-radius: 2px;
+    transform: rotate(var(--deg));
+    transition: transform 0.15s;
+  }
+  .wind-arrow::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: -5px;
+    border: 6px solid transparent;
+    border-bottom: 8px solid var(--flame);
+    border-top: 0;
+  }
+  .wind-note { margin: 0; font-size: 13px; color: var(--muted); }
+  .wind-note output { font-family: var(--font-mono); font-size: 12px; color: var(--flame-hot); }
+  @media (prefers-reduced-motion: reduce) { .wind-arrow, .wind { transition: none; } }
+
   @media (max-width: 760px) {
     .shell {
       grid-template-columns: 1fr;
@@ -228,6 +274,23 @@
         <input type="color" id="color" aria-label="Couleur">
         <span id="color-state">couleurs de l'effet</span>
         <button type="button" class="ghost" id="color-reset">Couleurs d'origine</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Vent de la scène</h2>
+      <label class="toggle"><input type="checkbox" id="wind-on"> Vent actif</label>
+      <div class="wind" id="wind-panel">
+        <div class="wind-rose" aria-hidden="true">
+          <span class="n">N</span><span class="e">E</span><span class="s">S</span><span class="o">O</span>
+          <div class="wind-arrow" id="wind-arrow"></div>
+        </div>
+        <div class="wind-controls">
+          <label class="control"><span>Souffle vers</span><input type="range" id="wind-dir" min="0" max="355" step="5" value="90"><output id="wind-dir-out">90°</output></label>
+          <label class="control"><span>Force</span><input type="range" id="wind-strength" min="0" max="150" step="5" value="40"><output id="wind-strength-out">40</output></label>
+          <label class="control"><span>Rafales</span><input type="range" id="wind-gusts" min="0" max="1" step="0.05" value="0.3"><output id="wind-gusts-out">30 %</output></label>
+          <p class="wind-note">Sensibilité de cet effet : <output id="wind-factor-out">1×</output></p>
+        </div>
       </div>
     </section>
 

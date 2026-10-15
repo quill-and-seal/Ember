@@ -130,6 +130,7 @@ export class EmitterConfig extends EmberApp {
         ${range("size", 0.25, 4, 0.05, e.size)}
         ${range("density", 0.1, 3, 0.05, e.density)}
         ${range("speed", 0.25, 3, 0.05, e.speed)}
+        ${range("windFactor", 0, 2, 0.05, e.windFactor)}
         <div class="form-group">
           <label>${t("Config.Radius")}</label>
           <div class="form-fields ember-range">
@@ -182,6 +183,7 @@ export class EmitterConfig extends EmberApp {
       size: Number(data.size),
       density: Number(data.density),
       speed: Number(data.speed),
+      windFactor: Number(data.windFactor),
       elevation: Number(data.elevation) || 0,
       color: colorInput?.hasAttribute("data-unset") ? null : data.color
     };
@@ -318,6 +320,102 @@ export class EmitterList extends EmberApp {
   static async #onRemove(event, target) {
     const id = EmitterList.#id(target);
     if (id) await this.manager.delete(id);
+  }
+}
+
+/* ============================================ */
+/*  Vent de la scène                            */
+/* ============================================ */
+
+const COMPASS = [
+  ["N", 0], ["NE", 45], ["E", 90], ["SE", 135],
+  ["S", 180], ["SO", 225], ["O", 270], ["NO", 315]
+];
+
+export class WindConfig extends EmberApp {
+  constructor(manager, options = {}) {
+    super(options);
+    this.manager = manager;
+  }
+
+  static DEFAULT_OPTIONS = {
+    id: "ember-wind",
+    tag: "form",
+    classes: ["ember", "ember-wind"],
+    window: { icon: "fa-solid fa-wind" },
+    position: { width: 380, height: "auto" },
+    form: { handler: WindConfig.#onSubmit, submitOnChange: true, closeOnSubmit: false },
+    actions: { compass: WindConfig.#onCompass }
+  };
+
+  get title() {
+    return t("Wind.Title");
+  }
+
+  _html() {
+    const w = this.manager.getWind();
+    const rose = COMPASS.map(
+      ([label, deg]) =>
+        `<button type="button" class="ember-compass-btn ${w.direction === deg ? "active" : ""}" data-action="compass" data-deg="${deg}" style="--deg:${deg}deg">${t(`Wind.Dir.${label}`)}</button>`
+    ).join("");
+    return `
+      <div class="form-group">
+        <label>${t("Wind.Enabled")}</label>
+        <div class="form-fields"><input type="checkbox" name="enabled" ${w.enabled ? "checked" : ""}></div>
+        <p class="hint">${t("Wind.Hint")}</p>
+      </div>
+      <div class="ember-compass ${w.enabled ? "" : "off"}">
+        ${rose}
+        <div class="ember-compass-arrow" style="--deg:${w.direction}deg"><i class="fa-solid fa-arrow-up"></i></div>
+      </div>
+      <div class="form-group">
+        <label>${t("Wind.Direction")}</label>
+        <div class="form-fields ember-range">
+          <input type="range" name="direction" min="0" max="355" step="5" value="${w.direction}">
+          <output>${w.direction}°</output>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>${t("Wind.Strength")}</label>
+        <div class="form-fields ember-range">
+          <input type="range" name="strength" min="0" max="150" step="5" value="${w.strength}">
+          <output>${w.strength}</output>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>${t("Wind.Gusts")}</label>
+        <div class="form-fields ember-range">
+          <input type="range" name="gusts" min="0" max="1" step="0.05" value="${w.gusts}">
+          <output>${Math.round(w.gusts * 100)} %</output>
+        </div>
+      </div>`;
+  }
+
+  _onRender(context, options) {
+    super._onRender?.(context, options);
+    const fmt = { direction: (v) => `${v}°`, strength: (v) => v, gusts: (v) => `${Math.round(v * 100)} %` };
+    const arrow = this.element.querySelector(".ember-compass-arrow");
+    for (const input of this.element.querySelectorAll(".ember-range input[type=range]")) {
+      const out = input.parentElement.querySelector("output");
+      input.addEventListener("input", () => {
+        out.textContent = fmt[input.name](Number(input.value));
+        if (input.name === "direction") arrow?.style.setProperty("--deg", `${input.value}deg`);
+      });
+    }
+  }
+
+  static async #onSubmit(event, form, formData) {
+    const d = formData.object;
+    await this.manager.setWind({
+      enabled: !!d.enabled,
+      direction: Number(d.direction),
+      strength: Number(d.strength),
+      gusts: Number(d.gusts)
+    });
+  }
+
+  static async #onCompass(event, target) {
+    await this.manager.setWind({ direction: Number(target.dataset.deg), enabled: true });
   }
 }
 

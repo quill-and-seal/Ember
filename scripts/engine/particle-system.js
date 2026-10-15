@@ -10,7 +10,9 @@
  *   - velocity  vitesse aléatoire { x: [min, max], y: [min, max] } en px/s
  *   - radial    élan qui s'éloigne du centre de la source [min, max] en px/s
  *   - swirl     tourbillon autour du centre [min, max] en degrés/s
- *   - wind      vent constant { x, y } en px/s
+ *   - wind      vent { x, y } en px/s, modifiable en direct avec setWind()
+ *   - gust      rafales (0..1) : la force du vent ondule dans le temps, en phase
+ *               pour tous les émetteurs (même horloge), comme un vrai coup de vent
  *   - drag      frottement (par seconde) qui freine l'élan, dans le plan et en hauteur
  *   - drift     dérive aléatoire ondulante
  * En hauteur :
@@ -69,6 +71,25 @@ export class EmberParticleSystem {
     this._attached = false;
     this._destroyed = false;
     this._tick = () => this.update(this.ticker.deltaMS);
+  }
+
+  /**
+   * Change le vent en direct, sans recréer les particules.
+   * @param {{x: number, y: number}} wind  px/s
+   * @param {number} [gust]                rafales 0..1
+   */
+  setWind(wind, gust = this.config.gust ?? 0) {
+    this.config.wind = { x: wind?.x ?? 0, y: wind?.y ?? 0 };
+    this.config.gust = gust;
+  }
+
+  /** Multiplicateur de rafale à l'instant présent (horloge partagée par tous les émetteurs). */
+  _gustFactor() {
+    const gust = this.config.gust ?? 0;
+    if (!gust) return 1;
+    const t = (globalThis.performance?.now?.() ?? Date.now()) / 1000;
+    const wave = 0.6 * Math.sin(t * 0.9) + 0.4 * Math.sin(t * 2.3 + 1.7);
+    return Math.max(0, 1 + gust * wave);
   }
 
   /** Particules vivantes. */
@@ -139,8 +160,9 @@ export class EmberParticleSystem {
     // Paramètres communs à toutes les particules pour ce pas
     const gx = cfg.gravity?.x ?? 0;
     const gy = cfg.gravity?.y ?? 0;
-    const windX = cfg.wind?.x ?? 0;
-    const windY = cfg.wind?.y ?? 0;
+    const gustFactor = this._gustFactor();
+    const windX = (cfg.wind?.x ?? 0) * gustFactor;
+    const windY = (cfg.wind?.y ?? 0) * gustFactor;
     const fall = cfg.fall ?? 0;
     const damping = cfg.drag ? Math.exp(-cfg.drag * dt) : 1;
     const perspective = cfg.perspective ?? DEFAULT_PERSPECTIVE;

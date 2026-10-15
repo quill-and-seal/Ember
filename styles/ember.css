@@ -126,3 +126,51 @@
 .ember-list .ember-row.disabled {
   opacity: 0.5;
 }
+
+/* Vent : rose des vents */
+.ember-wind .ember-compass {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  margin: 0.25rem auto 0.5rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.ember-wind .ember-compass.off {
+  opacity: 0.45;
+}
+
+.ember-wind .ember-compass-btn {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2.2rem;
+  height: 1.6rem;
+  margin: -0.8rem 0 0 -1.1rem;
+  padding: 0;
+  font-size: 0.8em;
+  line-height: 1;
+  transform: rotate(var(--deg)) translateY(-64px) rotate(calc(-1 * var(--deg)));
+}
+
+.ember-wind .ember-compass-btn.active {
+  border-color: var(--ember-accent);
+  color: var(--ember-accent);
+}
+
+.ember-wind .ember-compass-arrow {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  color: var(--ember-accent);
+  transform: rotate(var(--deg));
+  transition: transform 0.2s ease;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ember-wind .ember-compass-arrow { transition: none; }
+}

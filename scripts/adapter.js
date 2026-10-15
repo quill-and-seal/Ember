@@ -105,6 +105,36 @@ export function presetRadius(preset) {
 }
 
 /* -------------------------------------------- */
+/*  Vent                                        */
+/* -------------------------------------------- */
+
+/** Direction (degrés, 0 = haut de la carte, sens horaire) et force → vecteur {x, y}. */
+export function windVector(direction, strength) {
+  const rad = (direction * Math.PI) / 180;
+  return { x: Math.sin(rad) * strength, y: -Math.cos(rad) * strength };
+}
+
+/**
+ * Vent subi par un émetteur, en px/s à l'échelle de la scène, et intensité des rafales.
+ * Avec un vent de scène actif, il remplace la brise propre au preset et il est
+ * multiplié par la sensibilité du preset (windFactor) et celle de l'émetteur.
+ * Sans vent de scène, l'émetteur garde la brise de son preset.
+ */
+export function computeWind(emitter, preset, sceneWind, { gridPx = REFERENCE_GRID } = {}) {
+  const g = gridPx / REFERENCE_GRID;
+  const speed = emitter.speed ?? 1;
+  if (sceneWind?.enabled) {
+    const k = (preset.windFactor ?? 1) * (emitter.windFactor ?? 1) * g;
+    const v = windVector(sceneWind.direction ?? 0, (sceneWind.strength ?? 0) * k);
+    return { wind: v, gust: sceneWind.gusts ?? 0 };
+  }
+  return {
+    wind: { x: (preset.wind?.x ?? 0) * g * speed, y: (preset.wind?.y ?? 0) * g * speed },
+    gust: 0
+  };
+}
+
+/* -------------------------------------------- */
 /*  Configuration complète                      */
 /* -------------------------------------------- */
 
@@ -114,15 +144,16 @@ export function presetRadius(preset) {
  *
  * @param {object} emitter   Données de l'émetteur (voir EMITTER_DEFAULTS)
  * @param {object} preset    Définition du preset
- * @param {object} context   { gridPx, performance }
+ * @param {object} context   { gridPx, performance, wind } (wind : vent de scène)
  */
-export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performance = 1 } = {}) {
+export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performance = 1, wind = null } = {}) {
   const g = gridPx / REFERENCE_GRID;
   const size = emitter.size ?? 1;
   const speed = emitter.speed ?? 1;
   const density = (emitter.density ?? 1) * performance;
 
   const colorPoints = (emitter.color && curveFromColor(emitter.color)) || preset.color || [[0, "#ffffff"]];
+  const air = computeWind(emitter, preset, wind, { gridPx });
 
   return {
     mode: "effect",
@@ -150,7 +181,8 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     // Les accélérations suivent le carré de la vitesse pour garder les mêmes trajectoires.
     radial: scaleRange(preset.radial ?? [0, 0], g * speed),
     swirl: scaleRange(preset.swirl ?? [0, 0], speed),
-    wind: { x: (preset.wind?.x ?? 0) * g * speed, y: (preset.wind?.y ?? 0) * g * speed },
+    wind: air.wind,
+    gust: air.gust,
     drag: (preset.drag ?? 0) * speed,
     height: scaleRange(preset.height ?? [0, 0], g),
     lift: scaleRange(preset.lift ?? [0, 0], g * speed),
@@ -170,7 +202,7 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
 
 /** Clés comprises uniquement par le moteur maison. */
 const EMBER_ONLY_KEYS = [
-  "radial", "swirl", "wind", "drag", "height", "lift", "fall",
+  "radial", "swirl", "wind", "gust", "drag", "height", "lift", "fall",
   "groundFade", "perspective", "gravity", "prewarm", "gridScale"
 ];
 

@@ -6,7 +6,8 @@
       "Picker": "Choose the effect to place",
       "List": "Scene emitters",
       "Clear": "Delete all emitters",
-      "ClearConfirm": "Delete every particle emitter on this scene?"
+      "ClearConfirm": "Delete every particle emitter on this scene?",
+      "Wind": "Scene wind"
     },
     "Preset": {
       "campfire": "Campfire",
@@ -40,7 +41,8 @@
       "PresetColors": "effect colors",
       "Elevation": "Elevation",
       "Reset": "Reset to the effect's value",
-      "Delete": "Delete"
+      "Delete": "Delete",
+      "WindFactor": "Wind sensitivity"
     },
     "Picker": {
       "Title": "Effect to place",
@@ -68,6 +70,24 @@
     "Error": {
       "GMOnly": "Only the GM can edit emitters.",
       "NoParticleApi": "Ember: Foundry's particle generator was not found. Ember requires Foundry VTT v14."
+    },
+    "Wind": {
+      "Title": "Scene wind",
+      "Enabled": "Wind on",
+      "Hint": "Pushes every effect on the scene. Each effect reacts its own way: smoke and leaves blow away, fire barely bends, magic ignores it.",
+      "Direction": "Blows toward",
+      "Strength": "Strength",
+      "Gusts": "Gusts",
+      "Dir": {
+        "N": "N",
+        "NE": "NE",
+        "E": "E",
+        "SE": "SE",
+        "S": "S",
+        "SO": "SW",
+        "O": "W",
+        "NO": "NW"
+      }
     }
   }
 }

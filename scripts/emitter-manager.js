@@ -8,9 +8,9 @@
  * clients, et chacun reconstruit ses générateurs : pas besoin de socket.
  */
 
-import { MODULE_ID, FLAG_EMITTERS, EMITTER_DEFAULTS, LAYER_NAME, warn, t } from "./constants.js";
+import { MODULE_ID, FLAG_EMITTERS, FLAG_WIND, EMITTER_DEFAULTS, WIND_DEFAULTS, LAYER_NAME, warn, t } from "./constants.js";
 import { getPreset } from "./presets.js";
-import { buildConfig, buildArea, finalizeConfig, fallbackConfigs, toCoreConfig } from "./adapter.js";
+import { buildConfig, buildArea, computeWind, finalizeConfig, fallbackConfigs, toCoreConfig } from "./adapter.js";
 import { getParticleTexture } from "./textures.js";
 import { EmberParticleSystem } from "./engine/particle-system.js";
 import { createSceneContainer, canvasTicker } from "./engine/placement.js";
@@ -38,6 +38,11 @@ export class EmitterManager {
 
   getEmitter(id, scene = canvas.scene) {
     return this.getEmitters(scene)[id] ?? null;
+  }
+
+  /** Vent de la scène, complété par les valeurs par défaut. */
+  getWind(scene = canvas.scene) {
+    return { ...WIND_DEFAULTS, ...(scene?.getFlag(MODULE_ID, FLAG_WIND) ?? {}) };
   }
 
   /** Générateur actif d'un émetteur (pour les macros et le débogage). */
@@ -77,6 +82,14 @@ export class EmitterManager {
     await scene.unsetFlag(MODULE_ID, `${FLAG_EMITTERS}.${id}`);
   }
 
+  /** Modifie le vent de la scène (fusionné avec le vent actuel). */
+  async setWind(changes, scene = canvas.scene) {
+    this.#assertGM();
+    const next = { ...this.getWind(scene), ...changes };
+    await scene.setFlag(MODULE_ID, FLAG_WIND, next);
+    return next;
+  }
+
   async deleteAll(scene = canvas.scene) {
     this.#assertGM();
     await scene.unsetFlag(MODULE_ID, FLAG_EMITTERS);
@@ -111,10 +124,26 @@ export class EmitterManager {
     return !!getPreset(emitter.preset);
   }
 
-  /** Signature des réglages qui influencent le rendu (le libellé n'en fait pas partie). */
+  /**
+   * Signature des réglages qui imposent de recréer l'effet (le libellé n'en fait pas partie).
+   * Avec le moteur maison, le vent s'applique en direct : il n'en fait pas partie non plus.
+   * Le générateur de Foundry intègre le vent à ses vitesses : il faut le recréer.
+   */
   #signature(emitter) {
     const { label, id, ...rest } = emitter;
-    return JSON.stringify([rest, this.performance, this.engine, canvas.dimensions?.size]);
+    const wind = this.engine === "core" ? this.getWind() : null;
+    return JSON.stringify([rest, this.performance, this.engine, canvas.dimensions?.size, wind]);
+  }
+
+  /** Applique le vent de scène en direct aux effets du moteur maison. */
+  #applyWind(emitters) {
+    const sceneWind = this.getWind();
+    for (const [id, entry] of this.#active) {
+      const emitter = emitters[id];
+      if (!emitter || typeof entry.generator.setWind !== "function") continue;
+      const { wind, gust } = computeWind(emitter, getPreset(emitter.preset), sceneWind, { gridPx: canvas.dimensions.size });
+      entry.generator.setWind(wind, gust);
+    }
   }
 
   /** Aligne les générateurs actifs sur les émetteurs de la scène affichée. */
@@ -135,6 +164,7 @@ export class EmitterManager {
       if (generator) this.#active.set(emitter.id, { generator, signature: this.#signature(emitter) });
     }
 
+    this.#applyWind(emitters);
     canvas[LAYER_NAME]?.refreshHandles?.();
   }
 
@@ -176,7 +206,8 @@ export class EmitterManager {
     const preset = getPreset(emitter.preset);
     const base = buildConfig(emitter, preset, {
       gridPx: canvas.dimensions.size,
-      performance: this.performance
+      performance: this.performance,
+      wind: this.getWind()
     });
     const finalized = finalizeConfig(base, getParticleTexture);
     return this.engine === "core" ? this.#spawnCore(emitter, finalized) : this.#spawnEmber(emitter, finalized);

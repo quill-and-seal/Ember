@@ -5,7 +5,7 @@
  */
 
 import { PRESETS } from "../scripts/presets.js";
-import { buildConfig, buildArea, finalizeConfig, presetRadius } from "../scripts/adapter.js";
+import { buildConfig, buildArea, computeWind, finalizeConfig, presetRadius } from "../scripts/adapter.js";
 import { getParticleTexture } from "../scripts/textures.js";
 import { EmberParticleSystem } from "../scripts/engine/particle-system.js";
 import fr from "../lang/fr.json";
@@ -21,8 +21,11 @@ const state = {
   density: 1,
   speed: 1,
   radius: null,
-  color: null
+  color: null,
+  windFactor: 1
 };
+
+const wind = { enabled: false, direction: 90, strength: 40, gusts: 0.3 };
 
 const stageEl = document.getElementById("stage");
 const app = new PIXI.Application({ resizeTo: stageEl, backgroundAlpha: 0, antialias: true });
@@ -62,12 +65,25 @@ function rebuild() {
   system?.stop({ hard: true });
   container = new PIXI.Container();
   app.stage.addChildAt(container, 1);
-  const cfg = finalizeConfig(buildConfig(state, PRESETS[state.preset], { gridPx: GRID }), getParticleTexture);
+  const cfg = finalizeConfig(buildConfig(state, PRESETS[state.preset], { gridPx: GRID, wind }), getParticleTexture);
   system = new EmberParticleSystem(cfg, { container, ticker: app.ticker });
   system.start();
   app.stage.addChild(marker);
   drawMarker();
   renderStats(cfg);
+  applyWind();
+}
+
+/** Applique le vent en direct, comme le fait le module dans Foundry. */
+function applyWind() {
+  const { wind: v, gust } = computeWind(state, PRESETS[state.preset], wind, { gridPx: GRID });
+  system?.setWind(v, gust);
+  document.getElementById("wind-arrow").style.setProperty("--deg", `${wind.direction}deg`);
+  document.getElementById("wind-dir-out").textContent = `${wind.direction}°`;
+  document.getElementById("wind-strength-out").textContent = wind.strength;
+  document.getElementById("wind-gusts-out").textContent = `${Math.round(wind.gusts * 100)} %`;
+  document.getElementById("wind-factor-out").textContent = `${PRESETS[state.preset].windFactor ?? 1}×`;
+  document.getElementById("wind-panel").classList.toggle("off", !wind.enabled);
 }
 
 function moveTo(x, y) {
@@ -163,6 +179,17 @@ document.getElementById("color-reset").addEventListener("click", () => {
   syncControls();
   rebuild();
 });
+document.getElementById("wind-on").addEventListener("change", (e) => {
+  wind.enabled = e.target.checked;
+  applyWind();
+});
+for (const [id, key] of [["wind-dir", "direction"], ["wind-strength", "strength"], ["wind-gusts", "gusts"]]) {
+  document.getElementById(id).addEventListener("input", (e) => {
+    wind[key] = Number(e.target.value);
+    applyWind();
+  });
+}
+
 document.getElementById("burst").addEventListener("click", () => {
   for (let i = 0; i < 60; i++) system?._spawn();
 });

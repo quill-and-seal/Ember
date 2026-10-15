@@ -33,6 +33,8 @@ Sur un émetteur posé :
 - **Glisser** la pastille pour le déplacer (maintiens **Maj** pour l'aimanter au centre d'une case).
 - **Clic droit** ou **double-clic** pour ouvrir ses réglages : effet, taille, densité, vitesse, rayon, couleur, élévation, actif, caché aux joueurs.
 
+L'outil **Vent de la scène** règle un vent qui pousse tous les effets de la scène : direction (rose des vents), force et rafales. Chaque effet y réagit à sa façon (la fumée et les feuilles s'envolent, le feu se couche à peine, la magie l'ignore), et chaque émetteur a un curseur « Sensibilité au vent ». Avec le moteur maison, le vent change en direct, sans relancer les effets.
+
 L'outil **Émetteurs de la scène** liste tous les émetteurs : centrer la vue, activer/désactiver, régler, supprimer.
 
 Chaque joueur peut réduire la quantité de particules dans les **réglages du module** (« Qualité des particules ») si sa machine peine.
@@ -53,6 +55,9 @@ await ember.createEmitter({ preset: "campfire", x: 1200, y: 800, size: 1.5 });
 const emitters = ember.getEmitters();
 await ember.updateEmitter(id, { enabled: false });
 await ember.deleteEmitter(id);
+
+// Vent de la scène (direction en degrés : 0 = vers le haut de la carte, 90 = vers la droite)
+await ember.setWind({ enabled: true, direction: 225, strength: 60, gusts: 0.4 });
 
 // Ajouter un effet personnalisé (même format que scripts/presets.js)
 ember.registerPreset("frost", {

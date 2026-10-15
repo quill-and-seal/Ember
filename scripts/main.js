@@ -7,7 +7,7 @@ import { MODULE_ID, LAYER_NAME, FLAG_EMITTERS, log, t } from "./constants.js";
 import { PRESETS, allPresets, getPreset, registerPreset } from "./presets.js";
 import { EmitterManager } from "./emitter-manager.js";
 import { createEmberLayerClass } from "./emitter-layer.js";
-import { EmitterList, PresetPicker, openApps, openEmitterConfig } from "./apps.js";
+import { EmitterList, PresetPicker, WindConfig, openApps, openEmitterConfig } from "./apps.js";
 
 const manager = new EmitterManager();
 
@@ -75,6 +75,9 @@ Hooks.once("init", () => {
     updateEmitter: (id, changes, scene) => manager.update(id, changes, scene),
     deleteEmitter: (id, scene) => manager.delete(id, scene),
     getGenerator: (id) => manager.getGenerator(id),
+    getWind: (scene) => manager.getWind(scene),
+    setWind: (changes, scene) => manager.setWind(changes, scene),
+    openWind: () => new WindConfig(manager).render({ force: true }),
     openPicker: () => new PresetPicker().render({ force: true }),
     openList: () => new EmitterList(manager).render({ force: true })
   };
@@ -110,11 +113,18 @@ Hooks.on("getSceneControlButtons", (controls) => {
       order: 3,
       ...button(() => new EmitterList(manager).render({ force: true }))
     },
+    wind: {
+      name: "wind",
+      title: "EMBER.Controls.Wind",
+      icon: "fa-solid fa-wind",
+      order: 4,
+      ...button(() => new WindConfig(manager).render({ force: true }))
+    },
     clear: {
       name: "clear",
       title: "EMBER.Controls.Clear",
       icon: "fa-solid fa-trash",
-      order: 4,
+      order: 5,
       ...button(async () => {
         const ok = await foundry.applications.api.DialogV2.confirm({
           window: { title: t("Controls.Clear") },

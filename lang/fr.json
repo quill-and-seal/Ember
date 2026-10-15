@@ -6,7 +6,8 @@
       "Picker": "Choisir l'effet à poser",
       "List": "Émetteurs de la scène",
       "Clear": "Supprimer tous les émetteurs",
-      "ClearConfirm": "Supprimer tous les émetteurs de particules de cette scène ?"
+      "ClearConfirm": "Supprimer tous les émetteurs de particules de cette scène ?",
+      "Wind": "Vent de la scène"
     },
     "Preset": {
       "campfire": "Feu de camp",
@@ -40,7 +41,8 @@
       "PresetColors": "couleurs de l'effet",
       "Elevation": "Élévation",
       "Reset": "Revenir à la valeur de l'effet",
-      "Delete": "Supprimer"
+      "Delete": "Supprimer",
+      "WindFactor": "Sensibilité au vent"
     },
     "Picker": {
       "Title": "Effet à poser",
@@ -68,6 +70,24 @@
     "Error": {
       "GMOnly": "Seul le MJ peut modifier les émetteurs.",
       "NoParticleApi": "Ember : le générateur de particules de Foundry est introuvable. Ember nécessite Foundry VTT v14."
+    },
+    "Wind": {
+      "Title": "Vent de la scène",
+      "Enabled": "Vent actif",
+      "Hint": "Pousse tous les effets de la scène. Chaque effet y réagit à sa façon : la fumée et les feuilles s'envolent, le feu se couche à peine, la magie l'ignore.",
+      "Direction": "Souffle vers",
+      "Strength": "Force",
+      "Gusts": "Rafales",
+      "Dir": {
+        "N": "N",
+        "NE": "NE",
+        "E": "E",
+        "SE": "SE",
+        "S": "S",
+        "SO": "SO",
+        "O": "O",
+        "NO": "NO"
+      }
     }
   }
 }
