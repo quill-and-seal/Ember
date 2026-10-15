@@ -16,7 +16,7 @@ Chaque idée a son issue sur GitHub, avec ses détails et ses points à trancher
 - [ ] [#1 Durée de combustion en temps de jeu](https://github.com/quill-and-seal/Ember/issues/1)
 - [ ] [#2 Particules d'états sur les tokens](https://github.com/quill-and-seal/Ember/issues/2) (étape 2)
 - [ ] [#6 Les murs bloquent les particules](https://github.com/quill-and-seal/Ember/issues/6)
-- [ ] [#10 Son lié aux effets](https://github.com/quill-and-seal/Ember/issues/10)
+- [ ] [#10 Son d'ambiance lié aux effets (flammes, vent…)](https://github.com/quill-and-seal/Ember/issues/10)
 
 ## Jeu
 
