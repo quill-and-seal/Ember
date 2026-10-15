@@ -1,0 +1,67 @@
+{
+  "EMBER": {
+    "Controls": {
+      "Group": "Ember — Particules",
+      "Place": "Poser un émetteur (clic sur la scène)",
+      "Picker": "Choisir l'effet à poser",
+      "List": "Émetteurs de la scène",
+      "Clear": "Supprimer tous les émetteurs",
+      "ClearConfirm": "Supprimer tous les émetteurs de particules de cette scène ?"
+    },
+    "Preset": {
+      "campfire": "Feu de camp",
+      "torch": "Torche",
+      "smoke": "Fumée",
+      "embers": "Braises",
+      "sparks": "Étincelles",
+      "fireflies": "Lucioles",
+      "arcane": "Aura arcanique",
+      "holy": "Lumière sacrée",
+      "poison": "Brume toxique",
+      "bubbles": "Bulles",
+      "leaves": "Feuilles qui tombent",
+      "dust": "Poussière en suspension"
+    },
+    "Config": {
+      "Title": "Émetteur de particules",
+      "Missing": "Cet émetteur n'existe plus.",
+      "Label": "Nom",
+      "Preset": "Effet",
+      "Enabled": "Actif",
+      "Hidden": "Caché aux joueurs",
+      "HiddenHint": "Seul le MJ voit les particules.",
+      "Look": "Apparence",
+      "Size": "Taille",
+      "Density": "Densité",
+      "Speed": "Vitesse",
+      "Radius": "Rayon",
+      "Cells": "cases",
+      "Color": "Couleur",
+      "PresetColors": "couleurs de l'effet",
+      "Elevation": "Élévation",
+      "Reset": "Revenir à la valeur de l'effet",
+      "Delete": "Supprimer"
+    },
+    "Picker": {
+      "Title": "Effet à poser",
+      "Hint": "Choisis un effet, puis clique sur la scène pour le poser."
+    },
+    "List": {
+      "Title": "Émetteurs de la scène",
+      "Empty": "Aucun émetteur sur cette scène. Utilise l'outil « Poser un émetteur ».",
+      "Pan": "Centrer la vue",
+      "Toggle": "Activer / désactiver",
+      "Edit": "Réglages"
+    },
+    "Settings": {
+      "Performance": {
+        "Name": "Qualité des particules",
+        "Hint": "Réduit le nombre de particules affichées sur cet ordinateur. Utile pour les machines modestes."
+      }
+    },
+    "Error": {
+      "GMOnly": "Seul le MJ peut modifier les émetteurs.",
+      "NoParticleApi": "Ember : le générateur de particules de Foundry est introuvable. Ember nécessite Foundry VTT v14."
+    }
+  }
+}

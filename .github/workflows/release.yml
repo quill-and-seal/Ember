@@ -1,0 +1,38 @@
+name: Release
+
+# Publie module.json et module.zip quand une release GitHub est créée.
+# Le tag doit être de la forme v1.2.3 : la version et le lien de téléchargement
+# du manifeste sont mis à jour automatiquement à partir du tag.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Préparer la version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          jq --arg v "$VERSION" \
+             --arg d "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/module.zip" \
+             --arg m "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/module.json" \
+             '.version = $v | .download = $d | .manifest = $m' module.json > module.tmp.json
+          mv module.tmp.json module.json
+
+      - name: Créer l'archive
+        run: zip -r module.zip module.json scripts styles lang README.md LICENSE
+
+      - name: Joindre à la release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            module.json
+            module.zip

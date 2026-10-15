@@ -1,0 +1,67 @@
+{
+  "EMBER": {
+    "Controls": {
+      "Group": "Ember — Particles",
+      "Place": "Place an emitter (click on the scene)",
+      "Picker": "Choose the effect to place",
+      "List": "Scene emitters",
+      "Clear": "Delete all emitters",
+      "ClearConfirm": "Delete every particle emitter on this scene?"
+    },
+    "Preset": {
+      "campfire": "Campfire",
+      "torch": "Torch",
+      "smoke": "Smoke",
+      "embers": "Embers",
+      "sparks": "Sparks",
+      "fireflies": "Fireflies",
+      "arcane": "Arcane aura",
+      "holy": "Holy light",
+      "poison": "Toxic mist",
+      "bubbles": "Bubbles",
+      "leaves": "Falling leaves",
+      "dust": "Floating dust"
+    },
+    "Config": {
+      "Title": "Particle emitter",
+      "Missing": "This emitter no longer exists.",
+      "Label": "Name",
+      "Preset": "Effect",
+      "Enabled": "Active",
+      "Hidden": "Hidden from players",
+      "HiddenHint": "Only the GM sees the particles.",
+      "Look": "Appearance",
+      "Size": "Size",
+      "Density": "Density",
+      "Speed": "Speed",
+      "Radius": "Radius",
+      "Cells": "cells",
+      "Color": "Color",
+      "PresetColors": "effect colors",
+      "Elevation": "Elevation",
+      "Reset": "Reset to the effect's value",
+      "Delete": "Delete"
+    },
+    "Picker": {
+      "Title": "Effect to place",
+      "Hint": "Pick an effect, then click on the scene to place it."
+    },
+    "List": {
+      "Title": "Scene emitters",
+      "Empty": "No emitter on this scene. Use the \"Place an emitter\" tool.",
+      "Pan": "Center the view",
+      "Toggle": "Enable / disable",
+      "Edit": "Settings"
+    },
+    "Settings": {
+      "Performance": {
+        "Name": "Particle quality",
+        "Hint": "Reduces how many particles are drawn on this computer. Useful for modest machines."
+      }
+    },
+    "Error": {
+      "GMOnly": "Only the GM can edit emitters.",
+      "NoParticleApi": "Ember: Foundry's particle generator was not found. Ember requires Foundry VTT v14."
+    }
+  }
+}
