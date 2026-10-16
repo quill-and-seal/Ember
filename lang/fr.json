@@ -2,13 +2,14 @@
   "EMBER": {
     "Controls": {
       "Group": "Ember — Particules",
-      "Place": "Poser un émetteur (clic sur la scène)",
+      "Place": "Poser un émetteur (clic sur la scène ; clic sur une pastille pour la modifier)",
       "Picker": "Choisir l'effet à poser",
       "List": "Émetteurs de la scène",
       "Clear": "Supprimer tous les émetteurs",
       "ClearConfirm": "Supprimer tous les émetteurs de particules de cette scène ?",
       "Wind": "Vent de la scène",
-      "Weather": "Météo et vent de la scène"
+      "Weather": "Météo et vent de la scène",
+      "Select": "Sélectionner et modifier (clic dans la zone d'un effet, glisser pour le déplacer)"
     },
     "Preset": {
       "campfire": "Feu",

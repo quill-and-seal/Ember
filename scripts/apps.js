@@ -41,11 +41,13 @@ class EmberApp extends ApplicationV2 {
   _onFirstRender(context, options) {
     super._onFirstRender?.(context, options);
     openApps.add(this);
+    canvas?.ember?.refreshHandles?.();
   }
 
   _onClose(options) {
     super._onClose?.(options);
     openApps.delete(this);
+    canvas?.ember?.refreshHandles?.();
   }
 
   /** Appelé quand les émetteurs de la scène changent. */

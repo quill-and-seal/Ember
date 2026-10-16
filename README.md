@@ -30,10 +30,13 @@ Depuis la 0.2.0, la version stable utilise le moteur Ember. La pré-version va0.
 3. Clique sur **Choisir l'effet à poser** et sélectionne un effet.
 4. Avec l'outil **Poser un émetteur**, clique sur la scène.
 
-Sur un émetteur posé :
+Sur un émetteur posé, avec l'outil **Sélectionner** (flèche, l'outil par défaut du groupe Ember) :
 
-- **Glisser** la pastille pour le déplacer (maintiens **Maj** pour l'aimanter au centre d'une case).
-- **Clic droit** ou **double-clic** pour ouvrir ses réglages : effet, taille, densité, vitesse, rayon, couleur, élévation, actif, caché aux joueurs.
+- **Clic** n'importe où dans la zone de l'effet pour ouvrir ses réglages : effet, taille, densité, vitesse, rayon, couleur, élévation, actif, caché aux joueurs…
+- **Glisser** pour le déplacer (maintiens **Maj** pour l'aimanter au centre d'une case).
+- Au survol, un **trait pointillé** dessine la zone de l'effet ; tant que sa fenêtre est ouverte, un **contour plein** montre quel effet on modifie.
+
+Avec l'outil **Poser**, un clic sur la pastille centrale d'un émetteur l'ouvre aussi (et un glisser le déplace) au lieu d'en poser un nouveau. Le **clic droit** sur un effet ouvre ses réglages quel que soit l'outil.
 
 L'outil **Météo et vent de la scène** règle un vent qui pousse tous les effets de la scène : direction (rose des vents), force et rafales. Le vent agit de deux façons :
 

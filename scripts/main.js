@@ -8,7 +8,7 @@ import { PRESETS, allPresets, getPreset, registerPreset } from "./presets.js";
 import { GROUPS, allGroups, getGroup, registerGroup } from "./groups.js";
 import { EmitterManager } from "./emitter-manager.js";
 import { createEmberLayerClass } from "./emitter-layer.js";
-import { EmitterList, PresetPicker, WeatherConfig, openApps, openEmitterConfig } from "./apps.js";
+import { EmitterConfig, EmitterList, PresetPicker, WeatherConfig, openApps, openEmitterConfig } from "./apps.js";
 import { WEATHER_TYPES, WEATHER_AMBIANCES } from "./weather-presets.js";
 
 const manager = new EmitterManager();
@@ -74,7 +74,9 @@ Hooks.once("init", () => {
   CONFIG.Canvas.layers[LAYER_NAME] = {
     layerClass: createEmberLayerClass({
       manager,
-      openConfig: (id) => openEmitterConfig(id, manager)
+      openConfig: (id) => openEmitterConfig(id, manager),
+      // Émetteur dont la fenêtre est ouverte : contour plein autour de sa zone
+      isOpen: (id) => [...openApps].some((app) => app instanceof EmitterConfig && app.emitterId === id)
     }),
     group: "interface"
   };
@@ -120,6 +122,12 @@ Hooks.on("getSceneControlButtons", (controls) => {
   const button = (fn) => ({ button: true, onChange: fn });
 
   const tools = {
+    select: {
+      name: "select",
+      title: "EMBER.Controls.Select",
+      icon: "fa-solid fa-arrow-pointer",
+      order: 0
+    },
     place: {
       name: "place",
       title: "EMBER.Controls.Place",
@@ -168,7 +176,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
     icon: "fa-solid fa-fire-flame-curved",
     layer: LAYER_NAME,
     visible: game.user.isGM,
-    activeTool: "place"
+    activeTool: "select"
   };
 
   // v13+ : objets indexés par nom. Ancien format (tableaux) gardé par sécurité.

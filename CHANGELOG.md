@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0
+
+- Nouvel outil **Sélectionner** (outil par défaut du groupe Ember) : un clic dans la zone d'un effet ouvre ses réglages, un glisser le déplace.
+- Au survol, un trait pointillé dessine la zone de l'effet ; tant que sa fenêtre est ouverte, un contour plein montre l'effet en cours de modification.
+- Avec l'outil Poser, un clic sur la pastille d'un émetteur l'ouvre au lieu d'en poser un nouveau ; clic droit sur un effet = réglages, quel que soit l'outil.
+- Toute la souris (sélection, déplacement, clic droit) passe par le canvas directement, comme la pose depuis la 0.4.2 : le déplacement et l'ouverture des poignées ne dépendent plus des événements de Foundry v14.
+
 ## 0.4.3
 
 - Correction : en plein jour sur une carte claire, les flammes (feu, torche, bougie) formaient une grosse tache blanche. Leurs particules s'additionnaient à la couleur du sol jusqu'au blanc. Le jour, elles sont maintenant dessinées avec leurs vraies couleurs ; la nuit, elles redeviennent lumineuses (fusion additive) ; au crépuscule, le passage se fait en douceur (option `dayBlend` des presets).

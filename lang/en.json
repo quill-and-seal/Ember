@@ -2,13 +2,14 @@
   "EMBER": {
     "Controls": {
       "Group": "Ember — Particles",
-      "Place": "Place an emitter (click on the scene)",
+      "Place": "Place an emitter (click the scene; click a handle to edit it)",
       "Picker": "Choose the effect to place",
       "List": "Scene emitters",
       "Clear": "Delete all emitters",
       "ClearConfirm": "Delete every particle emitter on this scene?",
       "Wind": "Scene wind",
-      "Weather": "Scene weather and wind"
+      "Weather": "Scene weather and wind",
+      "Select": "Select and edit (click inside an effect's area, drag to move it)"
     },
     "Preset": {
       "campfire": "Fire",
