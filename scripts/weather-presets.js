@@ -17,7 +17,7 @@ export const WEATHER_TYPES = {
    * Pluie vue d'en haut (comme depuis un drone) : on ne voit presque pas les gouttes.
    * Ce qui se voit, c'est un voile gris qui ternit la scène, des rideaux de pluie plus denses
    * qui passent avec le vent, et quelques traits rapides près de la caméra, qui filent vers
-   * le point juste sous elle. Les impacts au sol restent très discrets.
+   * le point juste sous elle. Au sol, chaque impact fait un petit éclat et un anneau qui s'élargit.
    */
   rain: {
     icon: "fa-solid fa-cloud-rain",
@@ -61,13 +61,26 @@ export const WEATHER_TYPES = {
         drift: 0
       },
       splashes: {
-        perCell: 1.2,
+        perCell: 5,
         textures: ["ring"],
         windFactor: 0,
-        lifetime: [260, 380],
-        scale: [[0, 0.04], [1, 0.14]],
-        alpha: [[0, 0.3], [1, 0]],
+        lifetime: [320, 480],
+        scale: [[0, 0.06], [1, 0.32]],
+        alpha: [[0, 0.9], [0.4, 0.55], [1, 0]],
         color: [[0, "#d6e7f5"], [1, "#d6e7f5"]],
+        blend: "screen",
+        rotation: { spread: 0, speed: [0, 0] },
+        drift: 0
+      },
+      // Point d'impact : un petit éclat net, au centre de l'anneau, qui disparaît très vite
+      impacts: {
+        perCell: 4,
+        textures: ["dust"],
+        windFactor: 0,
+        lifetime: [90, 140],
+        scale: [[0, 0.09], [1, 0.05]],
+        alpha: [[0, 0.85], [1, 0]],
+        color: [[0, "#eef6fc"], [1, "#d6e7f5"]],
         blend: "screen",
         rotation: { spread: 0, speed: [0, 0] },
         drift: 0

@@ -133,8 +133,8 @@ const DRAWERS = {
   /** Éclaboussure de pluie : anneau fin qui s'élargit au sol. */
   ring(ctx) {
     const h = SIZE / 2;
-    ctx.strokeStyle = "rgba(255,255,255,0.9)";
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = "rgba(255,255,255,1)";
+    ctx.lineWidth = 6;
     ctx.beginPath();
     ctx.arc(h, h, h - 6, 0, Math.PI * 2);
     ctx.stroke();
