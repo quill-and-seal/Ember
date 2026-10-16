@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.2
+
+- Correction (pose par clic, suite) : le clic est maintenant lu directement sur le canvas, sans passer par les événements de Foundry, qui ne l'envoyaient pas au module sous v14. Un clic sur une poignée ou un glisser ne pose rien.
+- Les boutons de la barre d'outils n'utilisent plus `onClick`, déprécié depuis Foundry v13 (avertissement dans la console).
+
 ## 0.4.1
 
 - Correction : cliquer sur la scène avec l'outil « Poser un émetteur » ne créait rien sous Foundry v14 (le clic n'était plus relayé au calque). Le calque capte désormais le clic lui-même ; un glisser (sélection, déplacement de la vue) ne pose rien.

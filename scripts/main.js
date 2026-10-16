@@ -116,7 +116,8 @@ Hooks.once("init", () => {
 Hooks.on("getSceneControlButtons", (controls) => {
   if (!game.user.isGM) return;
 
-  const button = (fn) => ({ button: true, onChange: fn, onClick: fn });
+  // v13+ : onChange (onClick est déprécié et provoquait un avertissement)
+  const button = (fn) => ({ button: true, onChange: fn });
 
   const tools = {
     place: {

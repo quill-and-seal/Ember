@@ -44,6 +44,9 @@ export function createEmberLayerClass({ manager, openConfig }) {
     /** Dernière pose, pour ne pas poser deux fois si Foundry relaie aussi le clic. */
     #lastPlace = 0;
 
+    /** Élément HTML du canvas écouté pour les clics. */
+    #view = null;
+
     static get layerOptions() {
       return foundry.utils.mergeObject(super.layerOptions, {
         name: LAYER_NAME,
@@ -59,20 +62,23 @@ export function createEmberLayerClass({ manager, openConfig }) {
       await super._draw?.(options);
       this.handles = this.addChild(new PIXI.Container());
       this.handles.visible = false;
-      // Foundry v14 ne relaie pas toujours le clic de la scène au calque actif :
-      // le calque écoute lui-même le pointeur quand il est actif.
-      this.on("pointerdown", this.#onPointerDown, this);
-      this.on("pointerup", this.#onPointerUp, this);
-      this.on("pointerupoutside", () => (this.#press = null));
+      // Foundry v14 ne relaie pas le clic de la scène au calque : on écoute directement
+      // la souris sur le canvas (élément HTML), sans dépendre des événements de Foundry.
+      const view = canvas.app?.view ?? canvas.app?.canvas;
+      if (view?.addEventListener) {
+        this.#view = view;
+        view.addEventListener("pointerdown", this.#onDomDown);
+        view.addEventListener("pointerup", this.#onDomUp);
+      }
       this.refreshHandles();
     }
 
     async _tearDown(options) {
       this.#drag = null;
       this.#press = null;
-      this.off("pointerdown", this.#onPointerDown, this);
-      this.off("pointerup", this.#onPointerUp, this);
-      this.removeAllListeners?.("pointerupoutside");
+      this.#view?.removeEventListener("pointerdown", this.#onDomDown);
+      this.#view?.removeEventListener("pointerup", this.#onDomUp);
+      this.#view = null;
       this.handles = null;
       return super._tearDown?.(options);
     }
@@ -80,17 +86,12 @@ export function createEmberLayerClass({ manager, openConfig }) {
     _activate() {
       super._activate?.();
       if (this.handles) this.handles.visible = game.user.isGM;
-      // Le calque attrape les clics sur toute la scène tant qu'il est actif
-      this.eventMode = "static";
-      this.hitArea = canvas.dimensions?.rect ?? new PIXI.Rectangle(0, 0, canvas.dimensions.width, canvas.dimensions.height);
       this.refreshHandles();
     }
 
     _deactivate() {
       super._deactivate?.();
       if (this.handles) this.handles.visible = false;
-      this.eventMode = "passive";
-      this.hitArea = null;
       this.#press = null;
     }
 
@@ -105,23 +106,47 @@ export function createEmberLayerClass({ manager, openConfig }) {
       this.#place(origin);
     }
 
-    /** Pointeur enfoncé directement sur le calque (pas sur une poignée). */
-    #onPointerDown(event) {
-      if (event.button !== 0 || event.target !== this) return;
-      this.#press = { x: event.global.x, y: event.global.y, local: event.getLocalPosition(this) };
+    /** Outil « Poser » d'Ember sélectionné ? */
+    #placing() {
+      if (!game.user.isGM || activeToolName() !== "place") return false;
+      const control = ui.controls?.control;
+      const name = typeof control === "string" ? control : control?.name ?? ui.controls?.activeControl;
+      return !name || name === "ember";
     }
 
+    /** Bouton gauche enfoncé sur le canvas. */
+    #onDomDown = (event) => {
+      if (event.button !== 0 || !this.#placing()) return;
+      this.#press = { x: event.clientX, y: event.clientY };
+    };
+
     /** Relâché presque au même endroit : c'est un clic, on pose l'émetteur. */
-    #onPointerUp(event) {
+    #onDomUp = (event) => {
       const press = this.#press;
       this.#press = null;
-      if (!press || event.button !== 0) return;
-      if (Math.hypot(event.global.x - press.x, event.global.y - press.y) > CLICK_TOLERANCE) return;
-      this.#place(press.local);
+      if (!press || event.button !== 0 || !this.#placing()) return;
+      if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > CLICK_TOLERANCE) return;
+      const point = this.#toScene(event.clientX, event.clientY);
+      if (!point) return;
+      // Un clic sur une poignée la sélectionne : il ne pose rien
+      const grab = (HANDLE_RADIUS + 6) / (canvas.stage?.scale?.x || 1);
+      if (Object.values(manager.getEmitters()).some((e) => Math.hypot(e.x - point.x, e.y - point.y) <= grab)) return;
+      this.#place(point);
+    };
+
+    /** Position de la souris (coordonnées de la fenêtre) → coordonnées de la scène. */
+    #toScene(clientX, clientY) {
+      try {
+        if (typeof canvas.canvasCoordinatesFromClient === "function") return canvas.canvasCoordinatesFromClient({ x: clientX, y: clientY });
+      } catch {
+        /* repli ci-dessous */
+      }
+      const rect = this.#view?.getBoundingClientRect?.() ?? { left: 0, top: 0 };
+      return canvas.stage.toLocal(new PIXI.Point(clientX - rect.left, clientY - rect.top));
     }
 
     #place(origin) {
-      if (!origin || !game.user.isGM || activeToolName() !== "place") return;
+      if (!origin || !this.#placing()) return;
       const now = Date.now();
       if (now - this.#lastPlace < 250) return;
       this.#lastPlace = now;
