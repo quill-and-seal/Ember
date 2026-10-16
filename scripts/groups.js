@@ -43,8 +43,7 @@ export const GROUPS = {
     icon: "fa-solid fa-campground",
     layers: [
       { preset: "campfire", lead: true },
-      { preset: "embers", follow: true, density: 0.7 },
-      { preset: "sparks", follow: true, density: 0.6 },
+      { preset: "embers", follow: true, density: 1 },
       { preset: "smoke", tint: false, density: 0.5, size: 1.1 }
     ]
   },

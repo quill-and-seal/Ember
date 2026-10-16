@@ -67,7 +67,7 @@ Un groupe pose plusieurs effets ensemble sous **un seul émetteur** : une seule 
 
 | Groupe | Couches |
 |---|---|
-| Feu de camp | flammes, braises, étincelles, fumée |
+| Feu de camp | flammes, braises, fumée |
 | Forge | flammes, gerbes d'étincelles, braises, un peu de fumée |
 | Feu de cheminée | flammes, braises, fumée légère |
 | Chaudron | petit feu, bulles, vapeur |
@@ -75,7 +75,7 @@ Un groupe pose plusieurs effets ensemble sous **un seul émetteur** : une seule 
 | Cercle rituel | aura arcanique et six bougies en cercle |
 | Marais | brume toxique, bulles, lucioles |
 
-- La **couche principale** (la flamme du feu de camp) porte la lumière. Quand le vent la souffle, les couches qui en dépendent s'arrêtent (braises, étincelles) et la fumée continue.
+- La **couche principale** (la flamme du feu de camp) porte la lumière. Quand le vent la souffle, les couches qui en dépendent s'arrêtent (les braises) et la fumée continue.
 - La taille, la densité, la vitesse et le rayon de l'émetteur s'appliquent à toutes les couches ; agrandir le rayon du cercle rituel écarte les bougies.
 - La couleur choisie colore les flammes, pas la fumée : un feu violet fume gris. Dans le chaudron, c'est l'inverse : la couleur teinte les bulles et la vapeur, le feu reste orange.
 - Chaque couche garde ses propres réactions au vent, aux murs, aux tokens et à l'obscurité : sous le vent, la fumée part bien plus loin que les flammes.
@@ -123,8 +123,8 @@ ember.registerPreset("frost", {
   drift: 0.3
 });
 
-// Poser un groupe, sans les étincelles et avec une fumée plus épaisse
-await ember.createEmitter({ preset: "bonfire", x: 1200, y: 800, layers: { sparks: { off: true }, smoke: { density: 2 } } });
+// Poser un groupe, sans les braises et avec une fumée plus épaisse
+await ember.createEmitter({ preset: "bonfire", x: 1200, y: 800, layers: { embers: { off: true }, smoke: { density: 2 } } });
 
 // Ajouter un groupe personnalisé (même format que scripts/groups.js)
 ember.registerGroup("brazier", {
