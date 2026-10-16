@@ -10,7 +10,7 @@
       "Wind": "Scene wind"
     },
     "Preset": {
-      "campfire": "Campfire",
+      "campfire": "Fire",
       "torch": "Torch",
       "candle": "Candle",
       "smoke": "Smoke",
@@ -163,7 +163,7 @@
       "EmberOnly": "World reactions only work with the Ember engine."
     },
     "Group": {
-      "bonfire": "Full campfire",
+      "bonfire": "Campfire",
       "forge": "Forge",
       "hearth": "Hearth fire",
       "cauldron": "Cauldron",

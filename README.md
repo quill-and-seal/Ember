@@ -67,7 +67,7 @@ Un groupe pose plusieurs effets ensemble sous **un seul émetteur** : une seule 
 
 | Groupe | Couches |
 |---|---|
-| Feu de camp complet | flammes, braises, étincelles, fumée |
+| Feu de camp | flammes, braises, étincelles, fumée |
 | Forge | flammes, gerbes d'étincelles, braises, un peu de fumée |
 | Feu de cheminée | flammes, braises, fumée légère |
 | Chaudron | petit feu, bulles, vapeur |
@@ -87,9 +87,9 @@ Chaque joueur peut réduire la quantité de particules dans les **réglages du m
 
 ## Effets inclus
 
-Feu de camp · Torche · Bougie · Fumée · Braises · Étincelles · Lucioles · Aura arcanique · Lumière sacrée · Brume toxique · Bulles · Feuilles qui tombent · Poussière en suspension
+Feu · Torche · Bougie · Fumée · Braises · Étincelles · Lucioles · Aura arcanique · Lumière sacrée · Brume toxique · Bulles · Feuilles qui tombent · Poussière en suspension
 
-Groupes : Feu de camp complet · Forge · Feu de cheminée · Chaudron · Encensoir · Cercle rituel · Marais
+Groupes : Feu de camp · Forge · Feu de cheminée · Chaudron · Encensoir · Cercle rituel · Marais
 
 ## API pour les macros
 
@@ -142,7 +142,7 @@ ember.registerGroup("brazier", {
 
 - [x] Émetteurs posés sur la scène, presets, synchronisation
 - [x] Moteur Ember vue du dessus, vent, extinction, lumière adaptative, réactions au monde
-- [x] Groupes d'effets (feu de camp complet, forge, chaudron…)
+- [x] Groupes d'effets (feu de camp, forge, chaudron…)
 - [ ] Effets attachés aux tokens (auras qui suivent le token)
 - [ ] Effets ponctuels déclenchés (explosions, impacts, projectiles)
 - [ ] Météo plein écran (pluie, neige, cendres)

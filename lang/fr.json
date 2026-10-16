@@ -10,7 +10,7 @@
       "Wind": "Vent de la scène"
     },
     "Preset": {
-      "campfire": "Feu de camp",
+      "campfire": "Feu",
       "torch": "Torche",
       "candle": "Bougie",
       "smoke": "Fumée",
@@ -163,7 +163,7 @@
       "EmberOnly": "Les réactions au monde ne fonctionnent qu'avec le moteur Ember."
     },
     "Group": {
-      "bonfire": "Feu de camp complet",
+      "bonfire": "Feu de camp",
       "forge": "Forge",
       "hearth": "Feu de cheminée",
       "cauldron": "Chaudron",
