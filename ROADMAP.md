@@ -11,7 +11,7 @@ Chaque idée a son issue sur GitHub, avec ses détails et ses points à trancher
 - [x] Flammes fragiles soufflées par le vent, bougie (va0.1.0)
 - [x] Lumière adaptative, créée par Ember ou liée à une lumière de la scène (va0.1.0)
 - [x] Moteur Ember par défaut dans la version stable, réactions au monde : murs, tokens, obscurité (0.2.0)
-- [x] Groupes d'effets : plusieurs effets sous un seul émetteur, avec une seule lumière et une extinction partagée (0.3.0)
+- [x] [#17](https://github.com/quill-and-seal/Ember/issues/17) Groupes d'effets : plusieurs effets sous un seul émetteur, avec une seule lumière et une extinction partagée (0.3.0)
 
 ## Prioritaires
 
