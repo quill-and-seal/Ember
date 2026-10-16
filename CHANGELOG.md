@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+- **Correction de la « grosse orbe »** : la lumière d'Ember (torche, feu, bougie…) recevait son rayon en pieds alors que Foundry l'attend en pixels. Une torche qui devait éclairer 8 cases n'éclairait qu'une quarantaine de pixels, d'où un petit disque saturé. Elle éclaire maintenant toute sa portée, avec le halo de l'aperçu. Même correction pour les lumières liées (qui rétrécissaient) et pour l'éclair de la météo.
+- Les flammes retrouvent leur rendu lumineux de jour comme de nuit : la tache blanche de la 0.4.3 venait de cette même lumière, pas des particules (l'option `dayBlend` reste disponible pour les presets personnalisés).
+
 ## 0.5.0
 
 - Nouvel outil **Sélectionner** (outil par défaut du groupe Ember) : un clic dans la zone d'un effet ouvre ses réglages, un glisser le déplace.

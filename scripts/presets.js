@@ -86,7 +86,6 @@ export const PRESETS = {
     alpha: [[0, 0], [0.12, 0.65], [1, 0]],
     color: [[0, "#fff2b0"], [0.3, "#ffae3d"], [0.65, "#ff5a1f"], [1, "#5a1e0a"]],
     blend: "add",
-    dayBlend: "normal",
     rotation: { spread: 180, speed: [-40, 40] },
     drift: 0.15
   },
@@ -112,7 +111,6 @@ export const PRESETS = {
     alpha: [[0, 0], [0.1, 0.7], [1, 0]],
     color: [[0, "#fff4c2"], [0.35, "#ffb347"], [0.7, "#ff6224"], [1, "#4a1806"]],
     blend: "add",
-    dayBlend: "normal",
     rotation: { spread: 180, speed: [-30, 30] },
     drift: 0.1
   },
@@ -138,7 +136,6 @@ export const PRESETS = {
     alpha: [[0, 0], [0.1, 0.85], [1, 0]],
     color: [[0, "#fffbe6"], [0.3, "#ffd27a"], [0.7, "#ff8a2a"], [1, "#5a2a0a"]],
     blend: "add",
-    dayBlend: "normal",
     rotation: { spread: 180, speed: [-20, 20] },
     drift: 0.05
   },

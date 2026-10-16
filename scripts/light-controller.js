@@ -117,7 +117,10 @@ export class LightController {
     if (this.#broken) return;
     let geometry = false;
     let lighting = false;
-    const dist = canvas.dimensions?.distance ?? 5;
+    // Les sources de lumière de Foundry prennent leur rayon en PIXELS (et non en unités de la scène) :
+    // une case = canvas.dimensions.size px ; une unité (pied, mètre) = size / distance px.
+    const cellPx = canvas.dimensions?.size ?? 100;
+    const unitPx = cellPx / (canvas.dimensions?.distance || 5);
 
     for (const { emitter, preset, system } of this.#entries) {
       const base = lightConfig(emitter, preset);
@@ -130,8 +133,8 @@ export class LightController {
           x: system?.center?.x ?? emitter.x,
           y: system?.center?.y ?? emitter.y,
           elevation: emitter.elevation ?? 0,
-          dim: m.dim * dist,
-          bright: m.bright * dist,
+          dim: m.dim * cellPx,
+          bright: m.bright * cellPx,
           color: m.color,
           alpha: m.alpha,
           animation: this.#animation(m.animation),
@@ -151,7 +154,8 @@ export class LightController {
         const cfg = placeable?.document?.config;
         if (!cfg) continue;
         const m = modulateLight(base, level, { dim: cfg.dim, bright: cfg.bright, alpha: cfg.alpha, color: cfg.color });
-        const data = { dim: m.dim, bright: m.bright, alpha: m.alpha, disabled: m.disabled || !!placeable.document.hidden };
+        // Rayons du document en unités de la scène → pixels pour la source affichée
+        const data = { dim: m.dim * unitPx, bright: m.bright * unitPx, alpha: m.alpha, disabled: m.disabled || !!placeable.document.hidden };
         const entry = this.#linked.get(emitter.id);
         const res = this.#diff(entry.data, data, force);
         if (res.lighting) {

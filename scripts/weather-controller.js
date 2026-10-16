@@ -177,7 +177,8 @@ export class WeatherController {
       } else {
         const d = canvas.dimensions;
         const r = d.sceneRect ?? { x: 0, y: 0, width: d.width, height: d.height };
-        const radius = (Math.hypot(r.width, r.height) / 2 / d.size) * d.distance;
+        // Rayon en pixels (unité des sources de lumière de Foundry)
+        const radius = Math.hypot(r.width, r.height) / 2;
         const data = {
           x: r.x + r.width / 2,
           y: r.y + r.height / 2,
