@@ -321,7 +321,9 @@ export class EmberParticleSystem {
     this._updateLight(windReact, flickerAlpha, ms);
 
     // Apparitions (une flamme soufflée ne produit plus rien)
-    if (!this._stopped && this.lit && (!this.gate || this.gate())) {
+    if (!this._stopped && this.lit && (!this.gate || this.gate()) && cfg.bursts) {
+      this._updateBursts(ms, react);
+    } else if (!this._stopped && this.lit && (!this.gate || this.gate())) {
       const maxCount = cfg.count * react.count;
       this._accumulator += (cfg.spawnRate ?? 10) * react.rate * dt;
       while (this._accumulator >= 1 && this.particles.length < maxCount) {
@@ -426,6 +428,28 @@ export class EmberParticleSystem {
   /*  Particules                                  */
   /* -------------------------------------------- */
 
+  /**
+   * Gerbes : au lieu d'un flot continu, l'effet crache un paquet de particules d'un coup,
+   * dans une direction au hasard (coup de marteau sur l'enclume), puis attend le suivant.
+   * Le vent rapproche les gerbes (rate) et les fournit (count), comme pour le flot continu.
+   */
+  _updateBursts(ms, react) {
+    const b = this.config.bursts;
+    const rand = this.random;
+    // Premier coup à un moment au hasard : deux forges posées ensemble ne frappent pas en même temps
+    if (this._burstTimer === undefined) this._burstTimer = sampleRange(b.every ?? [1000, 1000], rand) * rand();
+    this._burstTimer -= ms * react.rate;
+    if (this._burstTimer > 0) return;
+    this._burstTimer = sampleRange(b.every ?? [1000, 1000], rand);
+    const n = Math.round(sampleRange(b.count ?? [10, 10], rand) * react.count);
+    const maxCount = this.config.count * react.count;
+    const spread = (b.spread ?? 360) * DEG;
+    this._burstDir = spread < TAU ? rand() * TAU : null;
+    this._burstSpread = spread;
+    for (let i = 0; i < n && this.particles.length < maxCount; i++) this._spawn();
+    this._burstDir = null;
+  }
+
   _spawn() {
     const cfg = this.config;
     const rand = this.random;
@@ -465,7 +489,13 @@ export class EmberParticleSystem {
       const dy = y - cy;
       const d = Math.hypot(dx, dy);
       // Au centre exact, on part dans une direction au hasard.
-      const angle = d > 0.5 ? Math.atan2(dy, dx) : rand() * TAU;
+      // Dans une gerbe, toutes les particules partent dans le même cône.
+      const angle =
+        this._burstDir != null
+          ? this._burstDir + (rand() - 0.5) * this._burstSpread
+          : d > 0.5
+            ? Math.atan2(dy, dx)
+            : rand() * TAU;
       p.vx += Math.cos(angle) * radial;
       p.vy += Math.sin(angle) * radial;
     }

@@ -246,6 +246,14 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     windEffects: preset.windEffects ?? null,
     // Flamme fragile, sauf si le MJ a désactivé l'extinction sur cet émetteur
     blowout: preset.blowout && emitter.blowout !== false ? { ...preset.blowout } : null,
+    // Gerbes : paquets de particules d'un coup (le nombre suit la densité)
+    bursts: preset.bursts
+      ? {
+          every: preset.bursts.every ?? [1000, 1000],
+          count: scaleRange(Array.isArray(preset.bursts.count) ? preset.bursts.count : [preset.bursts.count ?? 10, preset.bursts.count ?? 10], density),
+          spread: preset.bursts.spread ?? 360
+        }
+      : null,
     glow: buildGlow(emitter, preset, gridPx, glow),
     // Réactions au monde (la zone des murs est fournie par le gestionnaire)
     disturb: emitter.tokens !== false && preset.disturb ? scaleDisturb(preset.disturb, g, speed) : null,
@@ -296,7 +304,7 @@ export function blockedByWalls(emitter, preset) {
 
 /** Clés comprises uniquement par le moteur maison. */
 const EMBER_ONLY_KEYS = [
-  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
+  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "bursts", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
   "groundFade", "perspective", "gravity", "prewarm", "gridScale"
 ];
 

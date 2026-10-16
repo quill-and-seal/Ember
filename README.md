@@ -68,7 +68,7 @@ Un groupe pose plusieurs effets ensemble sous **un seul émetteur** : une seule 
 | Groupe | Couches |
 |---|---|
 | Feu de camp | flammes, braises, fumée |
-| Forge | flammes, gerbes d'étincelles, braises, un peu de fumée |
+| Forge | flammes, gerbes d'étincelles (comme des coups de marteau), braises, un peu de fumée |
 | Feu de cheminée | flammes, braises, fumée légère |
 | Chaudron | petit feu, bulles, vapeur |
 | Encensoir | braises, fumée d'encens |

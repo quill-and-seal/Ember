@@ -18,6 +18,8 @@
  *     speed    Vitesse relative
  *     radius   Rayon relatif (1 = celui de l'effet seul)
  *     offset   Décalage { x, y } en cases depuis le centre de l'émetteur
+ *     override Valeurs de l'effet remplacées pour cette couche (même format qu'un preset),
+ *              par exemple des gerbes : override: { bursts: { every, count, spread } }
  *     tint     false : la couleur choisie par le MJ ne s'applique pas à cette couche
  *              (la fumée d'un feu violet reste grise)
  *
@@ -52,7 +54,13 @@ export const GROUPS = {
     icon: "fa-solid fa-hammer",
     layers: [
       { preset: "campfire", lead: true, size: 0.75, density: 1.2 },
-      { preset: "sparks", follow: true, density: 1.6, speed: 1.2 },
+      // Gerbes d'étincelles, comme des coups de marteau sur l'enclume
+      {
+        preset: "sparks",
+        follow: true,
+        speed: 1.25,
+        override: { count: 90, lift: [120, 300], lifetime: [500, 1000], bursts: { every: [700, 1700], count: [16, 30], spread: 100 } }
+      },
       { preset: "embers", follow: true, density: 0.5, radius: 0.8 },
       { preset: "smoke", tint: false, density: 0.35 }
     ]
@@ -192,8 +200,9 @@ export function expandEmitter(emitter, getPreset, gridPx = REFERENCE_GRID) {
   const tweaks = emitter.layers ?? {};
   const out = [];
   group.layers.forEach((layer, index) => {
-    const preset = getPreset(layer.preset);
-    if (!preset) return;
+    const base = getPreset(layer.preset);
+    if (!base) return;
+    const preset = layer.override ? { ...base, ...layer.override } : base;
     // Réglages du MJ par effet (toutes les bougies d'un cercle ensemble)
     const tweak = tweaks[layer.preset] ?? {};
     const isLead = index === lead;

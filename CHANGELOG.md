@@ -7,6 +7,8 @@
 - La couleur choisie ne teinte que les couches prévues (la fumée d'un feu violet reste grise).
 - Chaque couche réagit au vent, aux murs, aux tokens et à l'obscurité selon son propre effet.
 - Section « Couches du groupe » dans les réglages de l'émetteur : retirer un effet ou changer sa densité.
+- Gerbes : un effet peut cracher ses particules par paquets, dans un cône au hasard, au lieu d'un flot continu (option `bursts`). La forge les utilise pour ses étincelles, comme des coups de marteau sur l'enclume. Le générateur de Foundry garde un flot continu.
+- Une couche de groupe peut remplacer des valeurs de son effet (`override`).
 - Sélecteur en deux parties, effets et groupes.
 - L'effet « Feu de camp » s'appelle désormais « Feu » ; « Feu de camp » désigne le groupe complet (flammes, braises, fumée). Les émetteurs déjà posés ne changent pas.
 - API : `registerGroup`, `getGroup`, `allGroups`, `getGenerators`, et l'option `layers` de `createEmitter`.

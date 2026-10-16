@@ -38,6 +38,8 @@
  *   light       Lumière émise : { bright, dim } en cases, color, alpha (intensité 0..1),
  *               animation Foundry { type, speed, intensity }. Elle suit la flamme : éteinte
  *               quand la flamme est soufflée, plus forte quand le vent l'attise.
+ *   bursts      Gerbes au lieu d'un flot continu : { every: [min, max] ms entre deux gerbes,
+ *               count: [min, max] particules par gerbe, spread: largeur du cône en degrés }
  *   drag        Frottement par seconde (0 = aucun)
  *
  *   Réactions au monde (moteur maison uniquement) :
