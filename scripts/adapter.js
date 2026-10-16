@@ -234,6 +234,8 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
       speed: { min: preset.rotation?.speed?.[0] ?? 0, max: preset.rotation?.speed?.[1] ?? 0 }
     },
     drift: { enabled: (preset.drift ?? 0) > 0, intensity: preset.drift ?? 0 },
+    // Traînée étirée selon la vitesse réelle (vent compris) : { speed: px/s pour doubler la longueur, max }
+    streak: preset.streak ? { speed: (preset.streak.speed ?? 60) * g, max: preset.streak.max ?? 4 } : null,
     elevation: emitter.elevation ?? 0,
     // Options propres au moteur maison, pensées pour la vue du dessus
     // (retirées ou approximées pour le générateur de Foundry).
@@ -307,7 +309,7 @@ export function blockedByWalls(emitter, preset) {
 
 /** Clés comprises uniquement par le moteur maison. */
 const EMBER_ONLY_KEYS = [
-  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "bursts", "douse", "wetness", "exclude", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
+  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "bursts", "douse", "wetness", "exclude", "streak", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
   "groundFade", "perspective", "gravity", "prewarm", "gridScale"
 ];
 

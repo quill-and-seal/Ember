@@ -140,17 +140,11 @@ const DRAWERS = {
     ctx.stroke();
   },
 
-  /** Goutte de pluie vue d'en haut : point net, un peu étiré. */
+  /** Goutte de pluie vue d'en haut : point rond et net (le moteur l'étire avec le vent). */
   drop(ctx) {
     const h = SIZE / 2;
-    ctx.save();
-    ctx.translate(h, h);
-    ctx.scale(1, 0.35);
-    ctx.fillStyle = radial(ctx, 0, 0, h, [[0, 1], [0.35, 0.8], [1, 0]]);
-    ctx.beginPath();
-    ctx.arc(0, 0, h, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    ctx.fillStyle = radial(ctx, h, h, h * 0.6, [[0, 1], [0.5, 0.8], [1, 0]]);
+    ctx.fillRect(0, 0, SIZE, SIZE);
   },
 
   /** Flocon de cendre : éclat irrégulier. */

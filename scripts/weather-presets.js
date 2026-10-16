@@ -21,18 +21,19 @@ export const WEATHER_TYPES = {
         perCell: 8,
         textures: ["drop"],
         windFactor: 1.6,
-        wind: { x: 18, y: 45 },
         lifetime: [380, 520],
-        velocity: { x: [-6, 6], y: [-6, 6] },
+        velocity: { x: [-2, 2], y: [-2, 2] },
+        // Vue du dessus : une goutte qui tombe droit est un point ; le vent l'étire en trait, toutes dans le même sens
+        streak: { speed: 40, max: 4 },
         height: [220, 380],
         lift: [-650, -800],
         fall: 400,
         groundFade: 40,
-        scale: [[0, 0.17], [1, 0.14]],
-        alpha: [[0, 0], [0.15, 0.7], [1, 0.6]],
+        scale: [[0, 0.1], [1, 0.08]],
+        alpha: [[0, 0], [0.15, 0.75], [1, 0.65]],
         color: [[0, "#c4dbef"], [1, "#9fbbd6"]],
         blend: "screen",
-        rotation: { spread: 0, speed: [0, 0], align: true },
+        rotation: { spread: 0, speed: [0, 0] },
         drift: 0
       },
       splashes: {
@@ -82,7 +83,8 @@ export const WEATHER_TYPES = {
     layers: {
       grains: {
         perCell: 3,
-        textures: ["spark"],
+        textures: ["dust"],
+        streak: { speed: 50, max: 6 },
         windFactor: 2.2,
         wind: { x: 140, y: 30 },
         lifetime: [900, 1600],
@@ -93,7 +95,7 @@ export const WEATHER_TYPES = {
         alpha: [[0, 0], [0.2, 0.75], [1, 0]],
         color: [[0, "#f0d6a2"], [1, "#d4ad6e"]],
         blend: "normal",
-        rotation: { spread: 0, speed: [0, 0], align: true },
+        rotation: { spread: 0, speed: [0, 0] },
         drift: 0.4
       },
       haze: {

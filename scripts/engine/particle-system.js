@@ -364,6 +364,7 @@ export class EmberParticleSystem {
     const groundFade = cfg.groundFade ?? null;
     const drift = cfg.drift?.enabled ? (cfg.drift.intensity ?? 0) * DRIFT_ACCEL * (cfg.gridScale ?? 1) : 0;
     const align = !!cfg.rotation?.alignVelocity;
+    const streak = cfg.streak ?? null;
     const { x: cx, y: cy } = this.center;
     const bounds = cfg.bounds ?? null;
     const exclude = cfg.exclude ?? null;
@@ -437,7 +438,16 @@ export class EmberParticleSystem {
       }
 
       // Orientation
-      if (align) {
+      let stretch = 1;
+      if (streak && !p.grounded) {
+        // Traînée : étirée dans le sens où la particule file réellement (vent compris),
+        // ronde quand elle tombe droit (pluie sans vent vue du dessus)
+        const mvx = p.vx + windX;
+        const mvy = p.vy + windY;
+        const speed = Math.hypot(mvx, mvy);
+        stretch = Math.min(streak.max ?? 4, 1 + speed / (streak.speed ?? 60));
+        if (speed > 1) p.rotation = Math.atan2(mvy, mvx);
+      } else if (align) {
         if (p.vx || p.vy) p.rotation = Math.atan2(p.vy, p.vx);
       } else {
         p.rotation += p.spin * dt;
@@ -445,7 +455,7 @@ export class EmberParticleSystem {
 
       // Apparence : la courbe de taille, agrandie par la hauteur
       const s = sampleCurve(this._scale, t) * (1 + p.z / perspective) * react.scale * flickerScale;
-      p.scale.set(s, s);
+      p.scale.set(s * stretch, s / Math.sqrt(stretch));
       p.alpha = Math.min(1, sampleCurve(this._alpha, t) * react.alpha * flickerAlpha);
       p.tint = sampleColor(this._tint, t);
     }
