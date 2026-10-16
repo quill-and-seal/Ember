@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- **Groupes d'effets** : plusieurs effets posés ensemble sous un seul émetteur (une poignée, une fenêtre, une lumière). Sept groupes fournis : feu de camp complet, forge, feu de cheminée, chaudron, encensoir, cercle rituel, marais.
+- Couche principale : elle porte la lumière ; quand le vent la souffle, braises et étincelles s'arrêtent, la fumée continue.
+- La couleur choisie ne teinte que les couches prévues (la fumée d'un feu violet reste grise).
+- Chaque couche réagit au vent, aux murs, aux tokens et à l'obscurité selon son propre effet.
+- Section « Couches du groupe » dans les réglages de l'émetteur : retirer un effet ou changer sa densité.
+- Sélecteur en deux parties, effets et groupes.
+- API : `registerGroup`, `getGroup`, `allGroups`, `getGenerators`, et l'option `layers` de `createEmitter`.
+- Aperçu : section « Groupes d'effets ».
+
 ## 0.2.0
 
 Le moteur Ember devient le moteur par défaut de la version stable (tout ce qui était dans la pré-version va0.1.0), avec en plus les réactions au monde :

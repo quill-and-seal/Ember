@@ -5,6 +5,7 @@
 
 import { MODULE_ID, LAYER_NAME, FLAG_EMITTERS, log, t } from "./constants.js";
 import { PRESETS, allPresets, getPreset, registerPreset } from "./presets.js";
+import { GROUPS, allGroups, getGroup, registerGroup } from "./groups.js";
 import { EmitterManager } from "./emitter-manager.js";
 import { createEmberLayerClass } from "./emitter-layer.js";
 import { EmitterList, PresetPicker, WindConfig, openApps, openEmitterConfig } from "./apps.js";
@@ -70,11 +71,16 @@ Hooks.once("init", () => {
     allPresets,
     getPreset,
     registerPreset,
+    groups: GROUPS,
+    allGroups,
+    getGroup,
+    registerGroup,
     getEmitters: (scene) => manager.getEmitters(scene),
     createEmitter: (data, scene) => manager.create(data, scene),
     updateEmitter: (id, changes, scene) => manager.update(id, changes, scene),
     deleteEmitter: (id, scene) => manager.delete(id, scene),
     getGenerator: (id) => manager.getGenerator(id),
+    getGenerators: (id) => manager.getGenerators(id),
     getWind: (scene) => manager.getWind(scene),
     setWind: (changes, scene) => manager.setWind(changes, scene),
     openWind: () => new WindConfig(manager).render({ force: true }),
@@ -191,7 +197,7 @@ Hooks.on("updateScene", (scene, changes) => {
 });
 
 Hooks.once("ready", () => {
-  log(`Prêt — ${Object.keys(allPresets()).length} presets, flag « ${FLAG_EMITTERS} ».`);
+  log(`Prêt — ${Object.keys(allPresets()).length} effets, ${Object.keys(allGroups()).length} groupes, flag « ${FLAG_EMITTERS} ».`);
   if (game.user.isGM && game.settings.get(MODULE_ID, "engine") === "core") {
     ui.notifications.warn(t("Engine.ActiveWarning"));
   }

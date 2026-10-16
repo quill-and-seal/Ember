@@ -57,6 +57,8 @@
  *   groundFade  Durée (ms) pour s'éteindre une fois au sol (absent = continue sa vie au sol)
  */
 
+import { getGroup, groupAsPreset } from "./groups.js";
+
 export const PRESETS = {
   campfire: {
     icon: "fa-solid fa-fire",
@@ -361,9 +363,20 @@ export const PRESETS = {
 /** Presets ajoutés par d'autres modules ou macros via l'API. */
 const CUSTOM = {};
 
-/** Retourne un preset par id (personnalisé en priorité), ou null. */
-export function getPreset(id) {
+/** Effet simple par id (personnalisé en priorité), sans les groupes. */
+export function getEffect(id) {
   return CUSTOM[id] ?? PRESETS[id] ?? null;
+}
+
+/**
+ * Retourne un preset par id, ou null. Pour un groupe, renvoie la vue « preset » du groupe
+ * (sa couche principale, avec l'icône, la zone et la liste des couches : voir groups.js).
+ */
+export function getPreset(id) {
+  const effect = getEffect(id);
+  if (effect) return effect;
+  const group = getGroup(id);
+  return group ? groupAsPreset(group, getEffect) : null;
 }
 
 /** Tous les presets disponibles, natifs puis personnalisés. */
@@ -378,10 +391,10 @@ export function registerPreset(id, definition) {
   return CUSTOM[id];
 }
 
-/** Libellé affichable d'un preset. */
+/** Libellé affichable d'un preset ou d'un groupe. */
 export function presetLabel(id) {
   const preset = getPreset(id);
   if (preset?.label) return preset.label;
-  const key = `EMBER.Preset.${id}`;
+  const key = preset?.group ? `EMBER.Group.${id}` : `EMBER.Preset.${id}`;
   return game.i18n.has(key) ? game.i18n.localize(key) : id;
 }

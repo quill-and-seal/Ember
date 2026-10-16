@@ -61,6 +61,26 @@ Les effets réagissent à la scène, sans rien écrire en base de données. Chaq
 - **Les tokens dérangent les effets** : un token qui traverse une fumée ou une brume l'écarte et y laisse un sillage, il soulève les feuilles et la poussière, et les lucioles le fuient. Seuls les tokens que le joueur voit comptent : un token invisible ne se trahit pas par les particules.
 - **L'obscurité de la scène compte** : les lucioles n'apparaissent que dans le noir, les flammes, braises et magies ressortent la nuit, la fumée et la poussière s'y voient moins. Les transitions de jour à nuit sont suivies en direct.
 
+### Groupes d'effets
+
+Un groupe pose plusieurs effets ensemble sous **un seul émetteur** : une seule poignée à déplacer, une seule fenêtre de réglages, une seule lumière. Le sélecteur les propose sous les effets simples.
+
+| Groupe | Couches |
+|---|---|
+| Feu de camp complet | flammes, braises, étincelles, fumée |
+| Forge | flammes, gerbes d'étincelles, braises, un peu de fumée |
+| Feu de cheminée | flammes, braises, fumée légère |
+| Chaudron | petit feu, bulles, vapeur |
+| Encensoir | braises, fumée d'encens |
+| Cercle rituel | aura arcanique et six bougies en cercle |
+| Marais | brume toxique, bulles, lucioles |
+
+- La **couche principale** (la flamme du feu de camp) porte la lumière. Quand le vent la souffle, les couches qui en dépendent s'arrêtent (braises, étincelles) et la fumée continue.
+- La taille, la densité, la vitesse et le rayon de l'émetteur s'appliquent à toutes les couches ; agrandir le rayon du cercle rituel écarte les bougies.
+- La couleur choisie colore les flammes, pas la fumée : un feu violet fume gris. Dans le chaudron, c'est l'inverse : la couleur teinte les bulles et la vapeur, le feu reste orange.
+- Chaque couche garde ses propres réactions au vent, aux murs, aux tokens et à l'obscurité : sous le vent, la fumée part bien plus loin que les flammes.
+- La section **Couches du groupe** de la fenêtre de réglages permet de retirer un effet du groupe ou de changer sa densité.
+
 L'outil **Émetteurs de la scène** liste tous les émetteurs : centrer la vue, activer/désactiver, régler, supprimer.
 
 Chaque joueur peut réduire la quantité de particules dans les **réglages du module** (« Qualité des particules ») si sa machine peine.
@@ -68,6 +88,8 @@ Chaque joueur peut réduire la quantité de particules dans les **réglages du m
 ## Effets inclus
 
 Feu de camp · Torche · Bougie · Fumée · Braises · Étincelles · Lucioles · Aura arcanique · Lumière sacrée · Brume toxique · Bulles · Feuilles qui tombent · Poussière en suspension
+
+Groupes : Feu de camp complet · Forge · Feu de cheminée · Chaudron · Encensoir · Cercle rituel · Marais
 
 ## API pour les macros
 
@@ -100,12 +122,27 @@ ember.registerPreset("frost", {
   rotation: { spread: 180, speed: [-60, 60] },
   drift: 0.3
 });
+
+// Poser un groupe, sans les étincelles et avec une fumée plus épaisse
+await ember.createEmitter({ preset: "bonfire", x: 1200, y: 800, layers: { sparks: { off: true }, smoke: { density: 2 } } });
+
+// Ajouter un groupe personnalisé (même format que scripts/groups.js)
+ember.registerGroup("brazier", {
+  label: "Brasero",
+  icon: "fa-solid fa-fire-burner",
+  layers: [
+    { preset: "campfire", lead: true, size: 0.6 },
+    { preset: "embers", follow: true, density: 0.5 },
+    { preset: "smoke", tint: false, density: 0.3, offset: { x: 0, y: -0.2 } }
+  ]
+});
 ```
 
 ## Feuille de route
 
 - [x] Émetteurs posés sur la scène, presets, synchronisation
 - [x] Moteur Ember vue du dessus, vent, extinction, lumière adaptative, réactions au monde
+- [x] Groupes d'effets (feu de camp complet, forge, chaudron…)
 - [ ] Effets attachés aux tokens (auras qui suivent le token)
 - [ ] Effets ponctuels déclenchés (explosions, impacts, projectiles)
 - [ ] Météo plein écran (pluie, neige, cendres)

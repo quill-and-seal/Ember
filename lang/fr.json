@@ -49,7 +49,10 @@
     },
     "Picker": {
       "Title": "Effet à poser",
-      "Hint": "Choisis un effet, puis clique sur la scène pour le poser."
+      "Hint": "Choisis un effet, puis clique sur la scène pour le poser.",
+      "Effects": "Effets",
+      "Groups": "Groupes d'effets",
+      "GroupsHint": "Plusieurs effets posés ensemble, avec une seule poignée et une seule lumière."
     },
     "List": {
       "Title": "Émetteurs de la scène",
@@ -105,7 +108,14 @@
       "bubbles": "éclatent plus vite",
       "leaves": "arrache bien plus de feuilles",
       "dust": "soulève la poussière",
-      "candle": "vacille, s'éteint dans un courant d'air et se rallume quand il retombe"
+      "candle": "vacille, s'éteint dans un courant d'air et se rallume quand il retombe",
+      "bonfire": "s'attise ; plus de braises et d'étincelles arrachées, la fumée se couche",
+      "forge": "s'attise et crache plus d'étincelles",
+      "hearth": "s'attise, la fumée se dissipe",
+      "cauldron": "le feu s'attise, la vapeur se dissipe",
+      "censer": "l'encens se dissipe plus vite",
+      "ritual": "la magie ignore le vent, mais les bougies peuvent s'éteindre",
+      "swamp": "la brume se disperse, les lucioles se cachent"
     },
     "Light": {
       "Title": "Lumière",
@@ -151,6 +161,20 @@
       "DarknessHint": "L'effet change d'aspect selon l'obscurité de la scène.",
       "DarknessNight": "N'apparaît que dans l'obscurité : invisible sur une scène en plein jour. Décoche pour l'afficher à toute heure.",
       "EmberOnly": "Les réactions au monde ne fonctionnent qu'avec le moteur Ember."
+    },
+    "Group": {
+      "bonfire": "Feu de camp complet",
+      "forge": "Forge",
+      "hearth": "Feu de cheminée",
+      "cauldron": "Chaudron",
+      "censer": "Encensoir",
+      "ritual": "Cercle rituel",
+      "swamp": "Marais"
+    },
+    "Layers": {
+      "Title": "Couches du groupe",
+      "Hint": "Décoche un effet pour le retirer du groupe, ou change sa densité. La taille, la densité et le rayon de l'émetteur s'appliquent à toutes les couches.",
+      "LeadHint": "Couche principale : elle porte la lumière et l'extinction du groupe."
     }
   }
 }

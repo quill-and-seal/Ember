@@ -95,6 +95,14 @@
     color: var(--muted);
   }
 
+  .hint {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  #layers-out:empty { display: none; }
+  #layers-out { margin: 8px 0 0; }
+
   .presets {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -257,12 +265,19 @@
   <aside class="bench">
     <header>
       <h1>Ember</h1>
-      <p>Aperçu du moteur de particules maison du module Foundry VTT, avec les presets réels de la branche <code>moteur-maison</code>. Vue du dessus : ce qui monte grossit en se rapprochant de la caméra.</p>
+      <p>Aperçu du moteur de particules maison du module Foundry VTT, avec les presets réels de la branche <code>main</code>. Vue du dessus : ce qui monte grossit en se rapprochant de la caméra.</p>
     </header>
 
     <section>
       <h2>Effet</h2>
       <div class="presets" id="presets"></div>
+    </section>
+
+    <section>
+      <h2>Groupes d'effets</h2>
+      <p class="hint">Plusieurs effets posés ensemble, avec une seule poignée et une seule lumière. Les étincelles s'arrêtent quand la flamme est soufflée ; la fumée continue.</p>
+      <div class="presets" id="groups"></div>
+      <p class="hint" id="layers-out"></p>
     </section>
 
     <section>

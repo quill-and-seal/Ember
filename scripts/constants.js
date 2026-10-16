@@ -54,7 +54,9 @@ export const EMITTER_DEFAULTS = Object.freeze({
   // Réactions au monde (moteur maison)
   walls: true,
   tokens: true,
-  darkness: true
+  darkness: true,
+  // Groupes : réglages par effet { [preset]: { off, density } }
+  layers: null
 });
 
 /** Log préfixé. */

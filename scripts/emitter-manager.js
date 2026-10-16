@@ -9,7 +9,8 @@
  */
 
 import { MODULE_ID, FLAG_EMITTERS, FLAG_WIND, EMITTER_DEFAULTS, WIND_DEFAULTS, LAYER_NAME, warn, t } from "./constants.js";
-import { getPreset } from "./presets.js";
+import { getPreset, getEffect } from "./presets.js";
+import { expandEmitter } from "./groups.js";
 import { buildConfig, buildArea, computeWind, finalizeConfig, fallbackConfigs, toCoreConfig } from "./adapter.js";
 import { getParticleTexture } from "./textures.js";
 import { EmberParticleSystem } from "./engine/particle-system.js";
@@ -23,7 +24,10 @@ import { blockedByWalls, presetRadius } from "./adapter.js";
 const DARKNESS_POLL_MS = 250;
 
 export class EmitterManager {
-  /** @type {Map<string, {generator: object, signature: string}>} */
+  /**
+   * Effets actifs par émetteur. Un émetteur simple a une seule couche ; un groupe en a plusieurs.
+   * @type {Map<string, {parts: Array<{emitter: object, preset: object, generator: object, lead: boolean, dx: number, dy: number}>, signature: string}>}
+   */
   #active = new Map();
 
   #warnedMissingApi = false;
@@ -61,9 +65,20 @@ export class EmitterManager {
     return { ...WIND_DEFAULTS, ...(scene?.getFlag(MODULE_ID, FLAG_WIND) ?? {}) };
   }
 
-  /** Générateur actif d'un émetteur (pour les macros et le débogage). */
+  /** Générateur actif d'un émetteur (couche principale pour un groupe), pour les macros et le débogage. */
   getGenerator(id) {
-    return this.#active.get(id)?.generator ?? null;
+    const parts = this.#active.get(id)?.parts ?? [];
+    return (parts.find((p) => p.lead) ?? parts[0])?.generator ?? null;
+  }
+
+  /** Tous les générateurs actifs d'un émetteur (une entrée par couche d'un groupe). */
+  getGenerators(id) {
+    return (this.#active.get(id)?.parts ?? []).map((p) => p.generator);
+  }
+
+  /** Toutes les couches actives, tous émetteurs confondus. */
+  *#allParts() {
+    for (const entry of this.#active.values()) yield* entry.parts;
   }
 
   /* -------------------------------------------- */
@@ -154,13 +169,13 @@ export class EmitterManager {
   }
 
   /** Applique le vent de scène en direct aux effets du moteur maison. */
-  #applyWind(emitters) {
+  #applyWind() {
     const sceneWind = this.getWind();
-    for (const [id, entry] of this.#active) {
-      const emitter = emitters[id];
-      if (!emitter || typeof entry.generator.setWind !== "function") continue;
-      const { wind, gust, airflow } = computeWind(emitter, getPreset(emitter.preset), sceneWind, { gridPx: canvas.dimensions.size });
-      entry.generator.setWind(wind, gust, airflow);
+    for (const part of this.#allParts()) {
+      if (typeof part.generator.setWind !== "function") continue;
+      // Chaque couche d'un groupe réagit au vent selon son propre effet
+      const { wind, gust, airflow } = computeWind(part.emitter, part.preset, sceneWind, { gridPx: canvas.dimensions.size });
+      part.generator.setWind(wind, gust, airflow);
     }
   }
 
@@ -178,11 +193,11 @@ export class EmitterManager {
 
     for (const emitter of Object.values(emitters)) {
       if (!this.#isVisible(emitter) || this.#active.has(emitter.id)) continue;
-      const generator = this.#spawn(emitter);
-      if (generator) this.#active.set(emitter.id, { generator, signature: this.#signature(emitter) });
+      const parts = this.#spawn(emitter);
+      if (parts.length) this.#active.set(emitter.id, { parts, signature: this.#signature(emitter) });
     }
 
-    this.#applyWind(emitters);
+    this.#applyWind();
     this.#startDarknessWatch();
     this.lights.sync(this.#lightEntries(emitters));
     canvas[LAYER_NAME]?.refreshHandles?.();
@@ -193,8 +208,12 @@ export class EmitterManager {
     const entries = [];
     for (const [id, entry] of this.#active) {
       const emitter = emitters[id];
-      if (!emitter || typeof entry.generator.getLight !== "function") continue;
-      entries.push({ emitter, preset: getPreset(emitter.preset), system: entry.generator });
+      // Un groupe n'a qu'une lumière : celle de sa couche principale
+      const lead = entry.parts.find((p) => p.lead);
+      if (!emitter || !lead || typeof lead.generator.getLight !== "function") continue;
+      // Réglages de lumière à jour (ils ne recréent pas l'effet), effet et couleur de la couche principale
+      const lit = { ...emitter, preset: lead.emitter.preset, color: lead.emitter.color, x: emitter.x + lead.dx, y: emitter.y + lead.dy };
+      entries.push({ emitter: lit, preset: lead.preset, system: lead.generator });
     }
     return entries;
   }
@@ -205,16 +224,14 @@ export class EmitterManager {
 
   /** Les murs ont changé (mur posé, porte ouverte…) : on recalcule la zone de chaque effet. */
   refreshWalls() {
-    const emitters = this.getEmitters();
-    for (const [id, entry] of this.#active) {
-      const emitter = emitters[id];
-      if (!emitter || typeof entry.generator.setBounds !== "function") continue;
-      entry.generator.setBounds(this.#wallBounds(emitter));
+    for (const part of this.#allParts()) {
+      if (typeof part.generator.setBounds !== "function") continue;
+      part.generator.setBounds(this.#wallBounds(part.emitter, part.preset));
     }
   }
 
-  #wallBounds(emitter) {
-    if (!blockedByWalls(emitter, getPreset(emitter.preset))) return null;
+  #wallBounds(emitter, preset = getPreset(emitter.preset)) {
+    if (!blockedByWalls(emitter, preset)) return null;
     return computeWallBounds(emitter.x, emitter.y, emitter.elevation ?? 0);
   }
 
@@ -225,7 +242,7 @@ export class EmitterManager {
       const dk = sceneDarkness();
       if (Math.abs(dk - this.#darkness) < 0.005) return;
       this.#darkness = dk;
-      for (const entry of this.#active.values()) entry.generator.setDarkness?.(dk);
+      for (const part of this.#allParts()) part.generator.setDarkness?.(dk);
     };
     this.#darkness = sceneDarkness();
     this.#darknessTimer = setInterval(tick, DARKNESS_POLL_MS);
@@ -247,51 +264,71 @@ export class EmitterManager {
   /** Déplace un émetteur en direct pendant un glisser-déposer, sans écrire en base. */
   moveLive(id, x, y) {
     const entry = this.#active.get(id);
-    const emitter = this.getEmitter(id);
-    if (!entry || !emitter) return;
-    const preset = getPreset(emitter.preset);
-    const area = buildArea(preset.area, x, y, canvas.dimensions.size, emitter.radius);
-    try {
-      const target = entry.generator.spawnArea;
-      if (target && typeof target === "object") {
-        target.x = area.x;
-        target.y = area.y;
+    if (!entry) return;
+    for (const part of entry.parts) {
+      const area = buildArea(part.preset.area, x + part.dx, y + part.dy, canvas.dimensions.size, part.emitter.radius);
+      try {
+        const target = part.generator.spawnArea;
+        if (target && typeof target === "object") {
+          target.x = area.x;
+          target.y = area.y;
+        }
+      } catch (err) {
+        // Pas grave : la position sera appliquée en relâchant la souris.
       }
-    } catch (err) {
-      // Pas grave : la position sera appliquée en relâchant la souris.
     }
   }
 
   #destroy(id) {
     const entry = this.#active.get(id);
     this.#active.delete(id);
-    try {
-      entry?.generator?.stop({ hard: true });
-    } catch (err) {
-      warn("Arrêt du générateur impossible", err);
+    for (const part of entry?.parts ?? []) {
+      try {
+        part.generator?.stop({ hard: true });
+      } catch (err) {
+        warn("Arrêt du générateur impossible", err);
+      }
     }
   }
 
-  /** Crée et démarre le générateur d'un émetteur avec le moteur choisi par le MJ. */
+  /**
+   * Crée et démarre les générateurs d'un émetteur avec le moteur choisi par le MJ :
+   * un seul pour un effet simple, un par couche pour un groupe (couche principale d'abord).
+   */
   #spawn(emitter) {
-    const preset = getPreset(emitter.preset);
-    const base = buildConfig(emitter, preset, {
-      gridPx: canvas.dimensions.size,
-      performance: this.performance,
-      wind: this.getWind()
-    });
-    const finalized = finalizeConfig(base, getParticleTexture);
-    return this.engine === "core" ? this.#spawnCore(emitter, finalized) : this.#spawnEmber(emitter, finalized);
+    const gridPx = canvas.dimensions.size;
+    const layers = expandEmitter(emitter, getEffect, gridPx).sort((a, b) => b.lead - a.lead);
+    const parts = [];
+    let lead = null;
+    let leadBlown = false;
+    for (const layer of layers) {
+      const base = buildConfig(layer.emitter, layer.preset, { gridPx, performance: this.performance, wind: this.getWind() });
+      const finalized = finalizeConfig(base, getParticleTexture);
+      let generator;
+      if (this.engine === "core") {
+        // Générateur de Foundry : une couche qui suit la flamme n'apparaît pas si la flamme est soufflée
+        if (layer.follow && leadBlown) continue;
+        generator = this.#spawnCore(layer.emitter, finalized);
+        if (layer.lead && !generator && finalized.blowout) leadBlown = true;
+      } else {
+        const gate = layer.follow && lead ? () => lead.lit : null;
+        generator = this.#spawnEmber(layer.emitter, finalized, layer.preset, gate);
+        if (layer.lead) lead = generator;
+      }
+      if (generator) parts.push({ emitter: layer.emitter, preset: layer.preset, generator, lead: layer.lead, dx: layer.dx, dy: layer.dy });
+    }
+    return parts;
   }
 
   /** Moteur maison. */
-  #spawnEmber(emitter, cfg) {
+  #spawnEmber(emitter, cfg, preset = getPreset(emitter.preset), gate = null) {
     let system;
-    cfg.bounds = this.#wallBounds(emitter);
+    cfg.bounds = this.#wallBounds(emitter, preset);
     cfg.darkness = sceneDarkness();
-    const reach = (emitter.radius ?? presetRadius(getPreset(emitter.preset))) * canvas.dimensions.size + canvas.dimensions.size * 2;
+    const reach = (emitter.radius ?? presetRadius(preset)) * canvas.dimensions.size + canvas.dimensions.size * 2;
     try {
       system = new EmberParticleSystem(cfg, {
+        gate,
         getDisturbers: cfg.disturb ? () => this.tokens.near(emitter.x, emitter.y, reach) : null,
         container: createSceneContainer(cfg.elevation),
         ticker: canvasTicker(),

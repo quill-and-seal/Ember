@@ -179,3 +179,25 @@
 .ember-engine-note {
   color: #d9822b;
 }
+
+/* Groupes d'effets */
+.ember-picker .ember-picker-title {
+  margin: 0.5rem 0 0;
+  font-size: 1em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ember .ember-layers .ember-layer label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ember .ember-layers .ember-layer .fa-crown {
+  color: var(--ember-accent);
+  font-size: 0.8em;
+}
+
+.ember .ember-layers .ember-layer.off .ember-range {
+  opacity: 0.45;
+}

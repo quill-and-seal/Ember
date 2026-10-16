@@ -6,7 +6,8 @@
  */
 
 import { MODULE_ID, t } from "./constants.js";
-import { allPresets, getPreset, presetLabel } from "./presets.js";
+import { allPresets, getPreset, getEffect, presetLabel } from "./presets.js";
+import { allGroups, leadIndex } from "./groups.js";
 import { presetRadius } from "./adapter.js";
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -94,9 +95,13 @@ export class EmitterConfig extends EmberApp {
     if (!e) return `<p>${t("Config.Missing")}</p>`;
     const preset = getPreset(e.preset);
     const radius = e.radius ?? presetRadius(preset);
-    const options = Object.keys(allPresets())
-      .map((id) => `<option value="${esc(id)}" ${id === e.preset ? "selected" : ""}>${esc(presetLabel(id))}</option>`)
-      .join("");
+    const opt = (id) => `<option value="${esc(id)}" ${id === e.preset ? "selected" : ""}>${esc(presetLabel(id))}</option>`;
+    const options = `
+      <optgroup label="${esc(t("Picker.Effects"))}">${Object.keys(allPresets()).map(opt).join("")}</optgroup>
+      <optgroup label="${esc(t("Picker.Groups"))}">${Object.keys(allGroups()).map(opt).join("")}</optgroup>`;
+    // Un groupe peut s'éteindre si l'une de ses couches est une flamme fragile (bougies du cercle rituel)
+    const canBlow = preset?.group ? preset.layers.some((l) => getEffect(l.preset)?.blowout) : !!preset?.blowout;
+    const behaviorKey = game.i18n.has(`EMBER.WindBehavior.${e.preset}`) ? `EMBER.WindBehavior.${e.preset}` : null;
 
     const range = (name, min, max, step, value, suffix = "×") => `
       <div class="form-group">
@@ -131,12 +136,12 @@ export class EmitterConfig extends EmberApp {
         ${range("density", 0.1, 3, 0.05, e.density)}
         ${range("speed", 0.25, 3, 0.05, e.speed)}
         ${range("windFactor", 0, 2, 0.05, e.windFactor)}
-        ${preset?.blowout ? `
+        ${canBlow ? `
         <div class="form-group">
           <label>${t("Config.Blowout")}</label>
           <div class="form-fields"><input type="checkbox" name="blowout" ${e.blowout !== false ? "checked" : ""}></div>
         </div>` : ""}
-        <p class="hint ember-wind-reaction"><i class="fa-solid fa-wind"></i> ${t("Config.WindReaction")} : ${esc(game.i18n.has(`EMBER.WindBehavior.${e.preset}`) ? game.i18n.localize(`EMBER.WindBehavior.${e.preset}`) : "—")}</p>
+        <p class="hint ember-wind-reaction"><i class="fa-solid fa-wind"></i> ${t("Config.WindReaction")} : ${esc(behaviorKey ? game.i18n.localize(behaviorKey) : "—")}</p>
         <div class="form-group">
           <label>${t("Config.Radius")}</label>
           <div class="form-fields ember-range">
@@ -158,11 +163,45 @@ export class EmitterConfig extends EmberApp {
           <div class="form-fields"><input type="number" name="elevation" step="any" value="${e.elevation}"></div>
         </div>
       </fieldset>
+      ${preset?.group ? this._layersHtml(e, preset) : ""}
       ${this._lightHtml(e, preset)}
       ${this._worldHtml(e, preset)}
       <footer class="ember-footer">
         <button type="button" data-action="delete" class="ember-danger"><i class="fa-solid fa-trash"></i> ${t("Config.Delete")}</button>
       </footer>`;
+  }
+
+  /**
+   * Section « Couches » d'un groupe : chaque effet du groupe peut être retiré ou rendu
+   * plus ou moins dense. Les couches du même effet (les bougies d'un cercle) se règlent ensemble.
+   */
+  _layersHtml(e, preset) {
+    const leadPreset = preset.layers[leadIndex(preset, getEffect)]?.preset;
+    const seen = new Map();
+    for (const layer of preset.layers) seen.set(layer.preset, (seen.get(layer.preset) ?? 0) + 1);
+    const rows = [...seen].map(([id, n]) => {
+      const tweak = e.layers?.[id] ?? {};
+      const isLead = id === leadPreset;
+      const density = tweak.density ?? 1;
+      const name = `${esc(presetLabel(id))}${n > 1 ? ` ×${n}` : ""}`;
+      return `
+        <div class="form-group ember-layer ${tweak.off && !isLead ? "off" : ""}">
+          <label>
+            <input type="checkbox" name="layer.${esc(id)}.on" ${tweak.off && !isLead ? "" : "checked"} ${isLead ? "disabled" : ""}>
+            ${name}${isLead ? ` <i class="fa-solid fa-crown" data-tooltip="${esc(t("Layers.LeadHint"))}"></i>` : ""}
+          </label>
+          <div class="form-fields ember-range">
+            <input type="range" name="layer.${esc(id)}.density" min="0.1" max="3" step="0.05" value="${density}">
+            <output>${density}×</output>
+          </div>
+        </div>`;
+    });
+    return `
+      <fieldset class="ember-layers">
+        <legend>${t("Layers.Title")}</legend>
+        <p class="hint">${t("Layers.Hint")}</p>
+        ${rows.join("")}
+      </fieldset>`;
   }
 
   /** Section « Réactions au monde » : murs, tokens, obscurité. */
@@ -299,7 +338,22 @@ export class EmitterConfig extends EmberApp {
     const radius = Number(data.radius);
     const presetChanged = changes.preset !== current.preset;
     changes.radius = presetChanged || Math.abs(radius - natural) < 0.001 ? null : radius;
+    // Couches d'un groupe (remises à zéro quand on change d'effet)
+    changes.layers = presetChanged ? null : EmitterConfig.#readLayers(form, current.layers);
     await this.manager.update(this.emitterId, changes);
+  }
+
+  /** Lit les réglages de couches du formulaire : { [preset]: { off, density } }. */
+  static #readLayers(form, previous) {
+    const out = {};
+    for (const range of form.querySelectorAll('input[type=range][name^="layer."]')) {
+      const id = range.name.slice(6, -".density".length);
+      const box = form.querySelector(`input[type=checkbox][name="layer.${CSS.escape(id)}.on"]`);
+      const density = Number(range.value);
+      const off = box && !box.disabled ? !box.checked : false;
+      out[id] = { off, density };
+    }
+    return Object.keys(out).length ? out : previous ?? null;
   }
 
   static async #onDelete() {
@@ -335,15 +389,22 @@ export class PresetPicker extends EmberApp {
 
   _html() {
     const current = game.settings.get(MODULE_ID, "currentPreset");
-    const tiles = Object.entries(allPresets())
-      .map(
-        ([id, p]) => `
+    const tiles = (entries) =>
+      entries
+        .map(
+          ([id, p]) => `
         <button type="button" class="ember-tile ${id === current ? "active" : ""}" data-action="pick" data-preset="${esc(id)}">
           <i class="${esc(p.icon)}"></i><span>${esc(presetLabel(id))}</span>
         </button>`
-      )
-      .join("");
-    return `<p class="hint">${t("Picker.Hint")}</p><div class="ember-grid">${tiles}</div>`;
+        )
+        .join("");
+    return `
+      <p class="hint">${t("Picker.Hint")}</p>
+      <h3 class="ember-picker-title">${t("Picker.Effects")}</h3>
+      <div class="ember-grid">${tiles(Object.entries(allPresets()))}</div>
+      <h3 class="ember-picker-title">${t("Picker.Groups")}</h3>
+      <p class="hint">${t("Picker.GroupsHint")}</p>
+      <div class="ember-grid">${tiles(Object.entries(allGroups()))}</div>`;
   }
 
   static async #onPick(event, target) {

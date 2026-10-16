@@ -78,14 +78,17 @@ export class EmberParticleSystem {
    * @param {(pos: {x, y}) => void} [options.onExtinguish]  Appelé quand le vent éteint la flamme
    * @param {(pos: {x, y}) => void} [options.onRelight]     Appelé quand elle se rallume
    * @param {() => Array<{x, y, r, vx, vy}>} [options.getDisturbers]  Tokens proches, appelé à chaque image
+   * @param {() => boolean} [options.gate]       Groupes : l'effet ne produit plus rien tant que gate() est faux
+   *                                              (les étincelles s'arrêtent quand la flamme du groupe est soufflée)
    */
-  constructor(config, { container, ticker, random = Math.random, clock, onExtinguish, onRelight, getDisturbers } = {}) {
+  constructor(config, { container, ticker, random = Math.random, clock, onExtinguish, onRelight, getDisturbers, gate } = {}) {
     this.config = config;
     this.random = random;
     this.clock = clock ?? (() => globalThis.performance?.now?.() ?? Date.now());
     this.onExtinguish = onExtinguish ?? null;
     this.onRelight = onRelight ?? null;
     this.getDisturbers = getDisturbers ?? null;
+    this.gate = gate ?? null;
 
     /** La flamme est-elle allumée ? (seuls les effets « blowout » peuvent s'éteindre) */
     this.lit = true;
@@ -318,7 +321,7 @@ export class EmberParticleSystem {
     this._updateLight(windReact, flickerAlpha, ms);
 
     // Apparitions (une flamme soufflée ne produit plus rien)
-    if (!this._stopped && this.lit) {
+    if (!this._stopped && this.lit && (!this.gate || this.gate())) {
       const maxCount = cfg.count * react.count;
       this._accumulator += (cfg.spawnRate ?? 10) * react.rate * dt;
       while (this._accumulator >= 1 && this.particles.length < maxCount) {
