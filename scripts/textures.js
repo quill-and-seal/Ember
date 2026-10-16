@@ -165,6 +165,22 @@ const DRAWERS = {
   }
 };
 
+/** Bruit fin, pour le grain de la tempête de sable (texture répétée, plus grande). */
+const NOISE_SIZE = 256;
+function drawNoise(ctx) {
+  let seed = 12345;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const img = ctx.createImageData(NOISE_SIZE, NOISE_SIZE);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const r = rand();
+    // Surtout du vide, quelques grains plus ou moins visibles
+    const a = r > 0.82 ? Math.round(((r - 0.82) / 0.18) * 255) : 0;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+    img.data[i + 3] = a;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
 /** Liste des textures disponibles (pour l'éditeur et la validation). */
 export const TEXTURE_IDS = Object.keys(DRAWERS);
 
@@ -174,11 +190,12 @@ export const TEXTURE_IDS = Object.keys(DRAWERS);
  * @returns {PIXI.Texture}
  */
 export function getParticleTexture(id) {
-  const key = DRAWERS[id] ? id : "glow";
+  const key = DRAWERS[id] || id === "noise" ? id : "glow";
   let tex = cache.get(key);
   if (tex && !tex.destroyed) return tex;
-  const c = makeCanvas();
-  DRAWERS[key](c.getContext("2d"));
+  const c = key === "noise" ? makeCanvas(NOISE_SIZE, NOISE_SIZE) : makeCanvas();
+  if (key === "noise") drawNoise(c.getContext("2d"));
+  else DRAWERS[key](c.getContext("2d"));
   tex = PIXI.Texture.from(c);
   cache.set(key, tex);
   return tex;

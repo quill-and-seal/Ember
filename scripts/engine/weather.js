@@ -186,6 +186,15 @@ export class WeatherSystem {
     this.root.addChild(this.overlay);
     this.particleRoot = new PIXI.Container();
     this.root.addChild(this.particleRoot);
+    // Grain (tempête de sable) : texture de bruit répétée qui file avec le vent, masquée aux intérieurs
+    if (PIXI.TilingSprite) {
+      this.grainMask = new PIXI.Graphics();
+      this.grain = new PIXI.TilingSprite(this.getTexture("noise"), 1, 1);
+      this.grain.mask = this.grainMask;
+      this.grain.visible = false;
+      this.root.addChild(this.grainMask);
+      this.root.addChild(this.grain);
+    }
     this.root.addChild(this.flashGfx);
     this._overlayDirty = true;
     this._ensureLayers();
@@ -299,7 +308,10 @@ export class WeatherSystem {
       this._overlayDirty = true;
     }
 
+    // Centre de la vue : les gouttes filent vers lui (perspective de la caméra)
+    const focus = { x: view.x + view.width / 2, y: view.y + view.height / 2 };
     for (const l of this.layers) {
+      l.sys.focus = focus;
       const lvl = this.level[l.channel] * k;
       l.sys.config.spawnRate = l.def.perCell * cells * lvl;
       l.sys.config.count = Math.ceil(l.alivePerCell * cells * lvl * 1.3) + (lvl > 0 ? 4 : 0);
@@ -315,6 +327,7 @@ export class WeatherSystem {
     }
 
     this._updateOverlay(scene);
+    this._updateGrain(scene, dt);
     this._updateLightning(scene);
   }
 
@@ -376,12 +389,52 @@ export class WeatherSystem {
         }
       }
       this.flashGfx.endFill();
+      if (this.grainMask) {
+        this.grainMask.clear();
+        this.grainMask.beginFill(0xffffff, 1).drawRect(scene.x, scene.y, scene.width, scene.height);
+        for (const pts of this.holes) {
+          if (pts?.length >= 6) {
+            this.grainMask.beginHole();
+            this.grainMask.drawPolygon(pts);
+            this.grainMask.endHole();
+          }
+        }
+        this.grainMask.endFill();
+        this.grain.position.set(scene.x, scene.y);
+        this.grain.width = scene.width;
+        this.grain.height = scene.height;
+      }
     }
     this.overlay.visible = alpha > 0.002;
     if (alpha > 0.002) {
       this.overlay.tint = (Math.round(r / alpha) << 16) | (Math.round(g / alpha) << 8) | Math.round(b / alpha);
       this.overlay.alpha = Math.min(0.5, alpha);
     }
+  }
+
+  /** Grain de sable : défile dans le sens du vent, plus dense et plus rapide dans les rafales. */
+  _updateGrain(scene, dt) {
+    if (!this.grain) return;
+    let alpha = 0;
+    let def = null;
+    for (const c of CHANNELS) {
+      const g = WEATHER_TYPES[c].grain;
+      if (!g || !this.level[c]) continue;
+      def = g;
+      alpha = Math.max(alpha, g.alpha * this.level[c]);
+    }
+    this.grain.visible = alpha > 0.005;
+    if (!this.grain.visible) return;
+    const gustAmp = this.wind?.enabled ? this.wind.gusts ?? 0 : 0;
+    const t = this.clock() / 1000;
+    const gust = Math.max(0.2, 1 + gustAmp * (0.6 * Math.sin(t * 0.9) + 0.4 * Math.sin(t * 2.3 + 1.7)));
+    const { wind } = computeWind({ speed: 1, windFactor: 1 }, { windFactor: 2.2, wind: { x: 140, y: 30 } }, this.wind, { gridPx: this.gridPx });
+    const speed = def.speed ?? 1;
+    this.grain.tilePosition.x += wind.x * speed * gust * dt;
+    this.grain.tilePosition.y += wind.y * speed * gust * dt;
+    this.grain.tileScale?.set?.(def.scale ?? 1, def.scale ?? 1);
+    this.grain.tint = parseInt((def.color ?? "#ffffff").slice(1), 16);
+    this.grain.alpha = Math.min(1, alpha * (0.7 + 0.3 * gust));
   }
 
   /** Éclairs : tirés sur l'horloge partagée, mêmes instants pour tous les joueurs. */

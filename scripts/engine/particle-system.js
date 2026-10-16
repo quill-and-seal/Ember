@@ -439,11 +439,18 @@ export class EmberParticleSystem {
 
       // Orientation
       let stretch = 1;
-      if (streak && !p.grounded) {
+      if (streak) {
         // Traînée : étirée dans le sens où la particule file réellement (vent compris),
         // ronde quand elle tombe droit (pluie sans vent vue du dessus)
-        const mvx = p.vx + windX;
-        const mvy = p.vy + windY;
+        let mvx = p.vx + windX;
+        let mvy = p.vy + windY;
+        // Perspective : une goutte qui tombe s'éloigne de la caméra, elle file donc vers le point
+        // juste sous la caméra (le centre de la vue), d'autant plus vite qu'elle tombe vite
+        if (streak.focus && this.focus) {
+          const k = Math.abs(p.vz) / (perspective * 2);
+          mvx += (this.focus.x - p.x) * k;
+          mvy += (this.focus.y - p.y) * k;
+        }
         const speed = Math.hypot(mvx, mvy);
         stretch = Math.min(streak.max ?? 4, 1 + speed / (streak.speed ?? 60));
         if (speed > 1) p.rotation = Math.atan2(mvy, mvx);

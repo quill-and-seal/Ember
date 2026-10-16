@@ -6,43 +6,67 @@
  * Chaque type de météo a des couches au format des presets (voir presets.js), avec en plus :
  *   perCell  Particules créées par seconde et par case visible, à pleine intensité
  * et un voile (overlay) : teinte légère posée sur la scène, sauf dans les intérieurs.
+ * grain : bruit fin sur toute la scène qui défile avec le vent (sable), { color, alpha, speed, scale }.
  *
  * wet : pluie reçue par les flammes exposées à pleine intensité (1 = averse battante).
  * Les flammes qui craignent la pluie (douse dans presets.js) s'éteignent au-delà de leur seuil.
  */
 
 export const WEATHER_TYPES = {
+  /**
+   * Pluie vue d'en haut (comme depuis un drone) : on ne voit presque pas les gouttes.
+   * Ce qui se voit, c'est un voile gris qui ternit la scène, des rideaux de pluie plus denses
+   * qui passent avec le vent, et quelques traits rapides près de la caméra, qui filent vers
+   * le point juste sous elle. Les impacts au sol restent très discrets.
+   */
   rain: {
     icon: "fa-solid fa-cloud-rain",
     wet: 1,
-    overlay: { color: "#1b2a3a", alpha: 0.14 },
+    overlay: { color: "#2b3846", alpha: 0.24 },
     layers: {
+      curtains: {
+        perCell: 0.012,
+        textures: ["light"],
+        windFactor: 1.2,
+        wind: { x: 6, y: 4 },
+        // Les rafales épaississent les rideaux
+        windEffects: { alpha: 1.6, count: 1.4, rate: 1.4 },
+        streak: { speed: 25, max: 3.5 },
+        lifetime: [5000, 8000],
+        velocity: { x: [-4, 4], y: [-4, 4] },
+        scale: [[0, 5], [0.5, 7], [1, 8]],
+        alpha: [[0, 0], [0.3, 0.16], [0.7, 0.16], [1, 0]],
+        color: [[0, "#b9c7d5"], [1, "#a3b3c4"]],
+        blend: "screen",
+        rotation: { spread: 0, speed: [0, 0] },
+        drift: 0.2
+      },
       drops: {
-        perCell: 8,
+        perCell: 2.5,
         textures: ["drop"],
         windFactor: 1.6,
         lifetime: [380, 520],
         velocity: { x: [-2, 2], y: [-2, 2] },
-        // Vue du dessus : une goutte qui tombe droit est un point ; le vent l'étire en trait, toutes dans le même sens
-        streak: { speed: 40, max: 4 },
+        // Traits fins et longs, orientés vers le centre de la vue et poussés par le vent
+        streak: { speed: 25, max: 9, focus: true },
         height: [220, 380],
         lift: [-650, -800],
         fall: 400,
         groundFade: 40,
-        scale: [[0, 0.1], [1, 0.08]],
-        alpha: [[0, 0], [0.15, 0.75], [1, 0.65]],
-        color: [[0, "#c4dbef"], [1, "#9fbbd6"]],
+        scale: [[0, 0.06], [1, 0.05]],
+        alpha: [[0, 0], [0.2, 0.45], [1, 0.3]],
+        color: [[0, "#d2e2f0"], [1, "#b4c8da"]],
         blend: "screen",
         rotation: { spread: 0, speed: [0, 0] },
         drift: 0
       },
       splashes: {
-        perCell: 6,
+        perCell: 1.2,
         textures: ["ring"],
         windFactor: 0,
-        lifetime: [280, 420],
-        scale: [[0, 0.05], [1, 0.26]],
-        alpha: [[0, 0.65], [1, 0]],
+        lifetime: [260, 380],
+        scale: [[0, 0.04], [1, 0.14]],
+        alpha: [[0, 0.3], [1, 0]],
         color: [[0, "#d6e7f5"], [1, "#d6e7f5"]],
         blend: "screen",
         rotation: { spread: 0, speed: [0, 0] },
@@ -80,6 +104,8 @@ export const WEATHER_TYPES = {
     icon: "fa-solid fa-wind",
     wet: 0,
     overlay: { color: "#b8874a", alpha: 0.18 },
+    // Grain de sable sur toute la scène : un bruit fin qui file avec le vent, plus dense dans les rafales
+    grain: { color: "#e2c48c", alpha: 0.4, speed: 1.4, scale: 1.5 },
     layers: {
       grains: {
         perCell: 3,

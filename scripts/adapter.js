@@ -235,7 +235,7 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     },
     drift: { enabled: (preset.drift ?? 0) > 0, intensity: preset.drift ?? 0 },
     // Traînée étirée selon la vitesse réelle (vent compris) : { speed: px/s pour doubler la longueur, max }
-    streak: preset.streak ? { speed: (preset.streak.speed ?? 60) * g, max: preset.streak.max ?? 4 } : null,
+    streak: preset.streak ? { speed: (preset.streak.speed ?? 60) * g, max: preset.streak.max ?? 4, focus: !!preset.streak.focus } : null,
     elevation: emitter.elevation ?? 0,
     // Options propres au moteur maison, pensées pour la vue du dessus
     // (retirées ou approximées pour le générateur de Foundry).

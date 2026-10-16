@@ -8,7 +8,8 @@
 - **La pluie éteint les feux exposés** (#9) dans un nuage de vapeur, avec rallumage après l'averse ; seuil propre à chaque flamme (bougie, braises, feu, torche). Option « À l'abri de la pluie » par émetteur.
 - Éclairs synchronisés sur l'heure du serveur, avec une vraie lumière brève sur toute la scène ; réglage par joueur « Flash des éclairs ».
 - Fondus de quelques secondes entre deux météos.
-- Gouttes vues du dessus : un point rond quand la pluie tombe droit, un trait étiré dans le sens du vent quand il souffle (toutes dans la même direction). Même principe pour les grains de sable.
+- Pluie vue d'en haut, comme depuis un drone : voile gris qui ternit la scène, rideaux de pluie plus denses qui passent avec le vent et s'épaississent dans les rafales, quelques traits fins qui filent vers le centre de la vue (perspective), impacts au sol discrets.
+- Tempête de sable : grain fin sur toute la scène qui défile avec le vent, plus dense dans les rafales (pas dans les intérieurs) ; grains étirés dans le sens du vent.
 - Fenêtre **Météo et vent de la scène** (remplace la fenêtre du vent) : neuf ambiances toutes prêtes, temps, intensité, brume, éclairs, vent.
 - API : `getWeather`, `setWeather`, `applyAmbiance`, `openWeather`.
 - Aperçu : section « Météo », avec la pièce fermée qui reste au sec.
