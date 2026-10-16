@@ -30,11 +30,11 @@ Chaque idée a son issue sur GitHub, avec ses détails et ses points à trancher
 
 - [x] [#7 Les tokens dérangent les effets](https://github.com/quill-and-seal/Ember/issues/7)
 - [x] [#8 Réaction à l'obscurité de la scène](https://github.com/quill-and-seal/Ember/issues/8)
-- [ ] [#9 La pluie éteint les feux](https://github.com/quill-and-seal/Ember/issues/9) (dépend de #11)
+- [x] [#9 La pluie éteint les feux](https://github.com/quill-and-seal/Ember/issues/9) (0.4.0)
 
 ## Météo
 
-- [ ] [#11 Météo vue du dessus](https://github.com/quill-and-seal/Ember/issues/11) (étape 4)
+- [x] [#11 Météo vue du dessus](https://github.com/quill-and-seal/Ember/issues/11) (0.4.0)
 
 ## Effets
 

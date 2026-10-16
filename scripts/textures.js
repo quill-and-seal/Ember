@@ -130,6 +130,39 @@ const DRAWERS = {
     ctx.fillRect(0, 0, SIZE, SIZE);
   },
 
+  /** Éclaboussure de pluie : anneau fin qui s'élargit au sol. */
+  ring(ctx) {
+    const h = SIZE / 2;
+    ctx.strokeStyle = "rgba(255,255,255,0.9)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(h, h, h - 6, 0, Math.PI * 2);
+    ctx.stroke();
+  },
+
+  /** Goutte de pluie vue d'en haut : point net, un peu étiré. */
+  drop(ctx) {
+    const h = SIZE / 2;
+    ctx.save();
+    ctx.translate(h, h);
+    ctx.scale(1, 0.35);
+    ctx.fillStyle = radial(ctx, 0, 0, h, [[0, 1], [0.35, 0.8], [1, 0]]);
+    ctx.beginPath();
+    ctx.arc(0, 0, h, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  },
+
+  /** Flocon de cendre : éclat irrégulier. */
+  ash(ctx) {
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.beginPath();
+    const pts = [[32, 12], [46, 22], [52, 38], [40, 50], [26, 52], [14, 40], [16, 24]];
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.closePath();
+    ctx.fill();
+  },
+
   /** Grain de poussière : petit point net. */
   dust(ctx) {
     const h = SIZE / 2;

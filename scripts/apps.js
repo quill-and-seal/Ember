@@ -8,6 +8,7 @@
 import { MODULE_ID, t } from "./constants.js";
 import { allPresets, getPreset, getEffect, presetLabel } from "./presets.js";
 import { allGroups, leadIndex } from "./groups.js";
+import { WEATHER_KINDS, WEATHER_AMBIANCES } from "./weather-presets.js";
 import { presetRadius } from "./adapter.js";
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -216,6 +217,15 @@ export class EmitterConfig extends EmberApp {
     if (preset?.walls === false) rows.push(`<p class="hint"><i class="fa-solid fa-wand-sparkles"></i> ${t("World.WallsMagic")}</p>`);
     else rows.push(box("walls", t("World.Walls"), t("World.WallsHint")));
     if (preset?.disturb) rows.push(box("tokens", t("World.Tokens"), t(`World.TokensHint`)));
+    const fearsRain = preset?.group ? preset.layers.some((l) => getEffect(l.preset)?.douse) : !!preset?.douse;
+    if (fearsRain) {
+      rows.push(`
+        <div class="form-group">
+          <label>${t("World.Sheltered")}</label>
+          <div class="form-fields"><input type="checkbox" name="sheltered" ${e.sheltered ? "checked" : ""}></div>
+          <p class="hint">${t("World.ShelteredHint")}</p>
+        </div>`);
+    }
     if (preset?.darkness) {
       const night = Array.isArray(preset.darkness.rate) && preset.darkness.rate[0] === 0;
       rows.push(box("darkness", t("World.Darkness"), night ? t("World.DarknessNight") : t("World.DarknessHint")));
@@ -330,6 +340,7 @@ export class EmitterConfig extends EmberApp {
       walls: form.querySelector("input[name=walls]") ? !!data.walls : current.walls,
       tokens: form.querySelector("input[name=tokens]") ? !!data.tokens : current.tokens,
       darkness: form.querySelector("input[name=darkness]") ? !!data.darkness : current.darkness,
+      sheltered: form.querySelector("input[name=sheltered]") ? !!data.sheltered : current.sheltered,
       color: colorInput?.hasAttribute("data-unset") ? null : data.color
     };
     // Le rayon n'est mémorisé que s'il diffère de celui du preset.
@@ -499,68 +510,116 @@ const COMPASS = [
   ["S", 180], ["SO", 225], ["O", 270], ["NO", 315]
 ];
 
-export class WindConfig extends EmberApp {
+export class WeatherConfig extends EmberApp {
   constructor(manager, options = {}) {
     super(options);
     this.manager = manager;
   }
 
   static DEFAULT_OPTIONS = {
-    id: "ember-wind",
+    id: "ember-weather",
     tag: "form",
-    classes: ["ember", "ember-wind"],
-    window: { icon: "fa-solid fa-wind" },
-    position: { width: 380, height: "auto" },
-    form: { handler: WindConfig.#onSubmit, submitOnChange: true, closeOnSubmit: false },
-    actions: { compass: WindConfig.#onCompass }
+    classes: ["ember", "ember-wind", "ember-weather"],
+    window: { icon: "fa-solid fa-cloud-sun-rain" },
+    position: { width: 420, height: "auto" },
+    form: { handler: WeatherConfig.#onSubmit, submitOnChange: true, closeOnSubmit: false },
+    actions: { compass: WeatherConfig.#onCompass, ambiance: WeatherConfig.#onAmbiance }
   };
 
   get title() {
-    return t("Wind.Title");
+    return t("Weather.Title");
   }
 
   _html() {
     const w = this.manager.getWind();
+    const m = this.manager.weather.getWeather();
+    const core = game.settings.get(MODULE_ID, "engine") === "core";
+    const ambiances = Object.entries(WEATHER_AMBIANCES)
+      .map(
+        ([id, a]) => `
+        <button type="button" class="ember-tile" data-action="ambiance" data-id="${esc(id)}">
+          <i class="${esc(a.icon)}"></i><span>${t(`Weather.Ambiance.${id}`)}</span>
+        </button>`
+      )
+      .join("");
+    const kinds = WEATHER_KINDS.map((k) => `<option value="${k}" ${m.kind === k ? "selected" : ""}>${t(`Weather.Kind.${k}`)}</option>`).join("");
+    const pct = (v) => `${Math.round(v * 100)} %`;
     const rose = COMPASS.map(
       ([label, deg]) =>
         `<button type="button" class="ember-compass-btn ${w.direction === deg ? "active" : ""}" data-action="compass" data-deg="${deg}" style="--deg:${deg}deg">${t(`Wind.Dir.${label}`)}</button>`
     ).join("");
     return `
-      <div class="form-group">
-        <label>${t("Wind.Enabled")}</label>
-        <div class="form-fields"><input type="checkbox" name="enabled" ${w.enabled ? "checked" : ""}></div>
-        <p class="hint">${t("Wind.Hint")}</p>
-      </div>
-      <div class="ember-compass ${w.enabled ? "" : "off"}">
-        ${rose}
-        <div class="ember-compass-arrow" style="--deg:${w.direction}deg"><i class="fa-solid fa-arrow-up"></i></div>
-      </div>
-      <div class="form-group">
-        <label>${t("Wind.Direction")}</label>
-        <div class="form-fields ember-range">
-          <input type="range" name="direction" min="0" max="355" step="5" value="${w.direction}">
-          <output>${w.direction}°</output>
+      ${core ? `<p class="hint ember-engine-note"><i class="fa-solid fa-triangle-exclamation"></i> ${t("Weather.EmberOnly")}</p>` : ""}
+      <fieldset>
+        <legend>${t("Weather.Ambiances")}</legend>
+        <div class="ember-grid ember-ambiances">${ambiances}</div>
+      </fieldset>
+      <fieldset>
+        <legend>${t("Weather.Sky")}</legend>
+        <div class="form-group">
+          <label>${t("Weather.KindLabel")}</label>
+          <div class="form-fields"><select name="kind">${kinds}</select></div>
         </div>
-      </div>
-      <div class="form-group">
-        <label>${t("Wind.Strength")}</label>
-        <div class="form-fields ember-range">
-          <input type="range" name="strength" min="0" max="150" step="5" value="${w.strength}">
-          <output>${w.strength}</output>
+        <div class="form-group">
+          <label>${t("Weather.Intensity")}</label>
+          <div class="form-fields ember-range">
+            <input type="range" name="intensity" min="0.05" max="1" step="0.05" value="${m.intensity}">
+            <output>${pct(m.intensity)}</output>
+          </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label>${t("Wind.Gusts")}</label>
-        <div class="form-fields ember-range">
-          <input type="range" name="gusts" min="0" max="1" step="0.05" value="${w.gusts}">
-          <output>${Math.round(w.gusts * 100)} %</output>
+        <div class="form-group">
+          <label>${t("Weather.Fog")}</label>
+          <div class="form-fields ember-range">
+            <input type="range" name="fog" min="0" max="1" step="0.05" value="${m.fog}">
+            <output>${pct(m.fog)}</output>
+          </div>
         </div>
-      </div>`;
+        <div class="form-group">
+          <label>${t("Weather.Lightning")}</label>
+          <div class="form-fields"><input type="checkbox" name="lightning" ${m.lightning ? "checked" : ""}></div>
+          <p class="hint">${t("Weather.LightningHint")}</p>
+        </div>
+        <p class="hint"><i class="fa-solid fa-house"></i> ${t("Weather.Indoors")}</p>
+      </fieldset>
+      <fieldset>
+        <legend>${t("Wind.Title")}</legend>
+        <div class="form-group">
+          <label>${t("Wind.Enabled")}</label>
+          <div class="form-fields"><input type="checkbox" name="enabled" ${w.enabled ? "checked" : ""}></div>
+          <p class="hint">${t("Wind.Hint")}</p>
+        </div>
+        <div class="ember-compass ${w.enabled ? "" : "off"}">
+          ${rose}
+          <div class="ember-compass-arrow" style="--deg:${w.direction}deg"><i class="fa-solid fa-arrow-up"></i></div>
+        </div>
+        <div class="form-group">
+          <label>${t("Wind.Direction")}</label>
+          <div class="form-fields ember-range">
+            <input type="range" name="direction" min="0" max="355" step="5" value="${w.direction}">
+            <output>${w.direction}°</output>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>${t("Wind.Strength")}</label>
+          <div class="form-fields ember-range">
+            <input type="range" name="strength" min="0" max="150" step="5" value="${w.strength}">
+            <output>${w.strength}</output>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>${t("Wind.Gusts")}</label>
+          <div class="form-fields ember-range">
+            <input type="range" name="gusts" min="0" max="1" step="0.05" value="${w.gusts}">
+            <output>${pct(w.gusts)}</output>
+          </div>
+        </div>
+      </fieldset>`;
   }
 
   _onRender(context, options) {
     super._onRender?.(context, options);
-    const fmt = { direction: (v) => `${v}°`, strength: (v) => v, gusts: (v) => `${Math.round(v * 100)} %` };
+    const pct = (v) => `${Math.round(v * 100)} %`;
+    const fmt = { direction: (v) => `${v}°`, strength: (v) => v, gusts: pct, intensity: pct, fog: pct };
     const arrow = this.element.querySelector(".ember-compass-arrow");
     for (const input of this.element.querySelectorAll(".ember-range input[type=range]")) {
       const out = input.parentElement.querySelector("output");
@@ -573,6 +632,12 @@ export class WindConfig extends EmberApp {
 
   static async #onSubmit(event, form, formData) {
     const d = formData.object;
+    await this.manager.weather.setWeather({
+      kind: d.kind,
+      intensity: Number(d.intensity),
+      fog: Number(d.fog),
+      lightning: !!d.lightning
+    });
     await this.manager.setWind({
       enabled: !!d.enabled,
       direction: Number(d.direction),
@@ -584,7 +649,17 @@ export class WindConfig extends EmberApp {
   static async #onCompass(event, target) {
     await this.manager.setWind({ direction: Number(target.dataset.deg), enabled: true });
   }
+
+  static async #onAmbiance(event, target) {
+    const amb = WEATHER_AMBIANCES[target.dataset.id];
+    if (!amb) return;
+    await this.manager.weather.setWeather(amb.weather);
+    await this.manager.setWind(amb.wind);
+  }
 }
+
+/** Ancien nom de la fenêtre (le vent fait désormais partie de la météo). */
+export const WindConfig = WeatherConfig;
 
 /** Ouvre (ou ramène au premier plan) la fenêtre de réglages d'un émetteur. */
 export function openEmitterConfig(id, manager) {

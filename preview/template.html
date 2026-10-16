@@ -153,6 +153,16 @@
     font-variant-numeric: tabular-nums;
   }
   input[type="range"] { width: 100%; accent-color: var(--flame); }
+  .control select {
+    font: inherit;
+    font-size: 13px;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 4px 6px;
+  }
+  .control select option { color: #000; }
 
   .color-row {
     display: flex;
@@ -291,6 +301,20 @@
         <span id="color-state">couleurs de l'effet</span>
         <button type="button" class="ghost" id="color-reset">Couleurs d'origine</button>
       </div>
+    </section>
+
+    <section>
+      <h2>Météo</h2>
+      <p class="hint">Les particules de météo sont accrochées à la carte, comme les tokens : elles ne naissent que dans la partie visible, et une zone qui apparaît est remplie tout de suite. Coche « Pièce fermée » : l'intérieur reste au sec, et le feu aussi.</p>
+      <div class="presets" id="ambiances"></div>
+      <label class="control" style="margin-top:10px"><span>Temps</span>
+        <select id="w-kind">
+          <option value="none">Aucun</option><option value="rain">Pluie</option><option value="snow">Neige</option><option value="sand">Tempête de sable</option><option value="ash">Pluie de cendres</option>
+        </select><output></output></label>
+      <label class="control"><span>Intensité</span><input type="range" id="w-int" min="0.05" max="1" step="0.05" value="0.7"><output id="w-int-out">70 %</output></label>
+      <label class="control"><span>Brume</span><input type="range" id="w-fog" min="0" max="1" step="0.05" value="0"><output id="w-fog-out">0 %</output></label>
+      <label class="toggle"><input type="checkbox" id="w-light"> Éclairs</label>
+      <p class="wind-note">Pluie reçue par le feu : <output id="w-wet">0 %</output></p>
     </section>
 
     <section>

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0
+
+- **Météo vue du dessus** (#11), moteur Ember : pluie qui tombe vers le sol et éclabousse, neige qui se pose puis fond, tempête de sable au ras du sol, pluie de cendres, brume, éclairs. Le vent de la scène pousse tout.
+- Particules accrochées à la carte : elles restent à leur place quand on déplace la vue ou qu'on dézoome. Elles ne naissent que dans la partie visible, et une zone qui apparaît est remplie aussitôt.
+- Intérieurs au sec : les régions « Supprimer la météo » de Foundry ne reçoivent ni pluie ni voile.
+- **La pluie éteint les feux exposés** (#9) dans un nuage de vapeur, avec rallumage après l'averse ; seuil propre à chaque flamme (bougie, braises, feu, torche). Option « À l'abri de la pluie » par émetteur.
+- Éclairs synchronisés sur l'heure du serveur, avec une vraie lumière brève sur toute la scène ; réglage par joueur « Flash des éclairs ».
+- Fondus de quelques secondes entre deux météos.
+- Fenêtre **Météo et vent de la scène** (remplace la fenêtre du vent) : neuf ambiances toutes prêtes, temps, intensité, brume, éclairs, vent.
+- API : `getWeather`, `setWeather`, `applyAmbiance`, `openWeather`.
+- Aperçu : section « Météo », avec la pièce fermée qui reste au sec.
+
 ## 0.3.0
 
 - **Groupes d'effets** : plusieurs effets posés ensemble sous un seul émetteur (une poignée, une fenêtre, une lumière). Sept groupes fournis : feu de camp, forge, feu de cheminée, chaudron, encensoir, cercle rituel, marais.

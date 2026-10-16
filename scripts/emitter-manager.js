@@ -18,6 +18,7 @@ import { createSceneContainer, canvasTicker } from "./engine/placement.js";
 import { spawnPuff } from "./engine/puff.js";
 import { LightController } from "./light-controller.js";
 import { TokenTracker, computeWallBounds, sceneDarkness } from "./world.js";
+import { WeatherController } from "./weather-controller.js";
 import { blockedByWalls, presetRadius } from "./adapter.js";
 
 /** Intervalle de relecture de l'obscurité de la scène (ms). */
@@ -37,6 +38,9 @@ export class EmitterManager {
 
   /** Tokens visibles, partagés par tous les émetteurs (réactions au monde). */
   tokens = new TokenTracker();
+
+  /** Météo de la scène (moteur maison uniquement). */
+  weather = new WeatherController(this);
 
   #darkness = 0;
   #darknessTimer = null;
@@ -198,6 +202,8 @@ export class EmitterManager {
     }
 
     this.#applyWind();
+    this.weather.sync();
+    this.#applyWetness();
     this.#startDarknessWatch();
     this.lights.sync(this.#lightEntries(emitters));
     canvas[LAYER_NAME]?.refreshHandles?.();
@@ -235,10 +241,28 @@ export class EmitterManager {
     return computeWallBounds(emitter.x, emitter.y, emitter.elevation ?? 0);
   }
 
-  /** Relit l'obscurité de la scène régulièrement (elle peut s'animer de jour à nuit). */
+  /** Pluie reçue par chaque flamme : rien à l'intérieur ni pour un émetteur abrité. */
+  #applyWetness() {
+    for (const part of this.#allParts()) {
+      if (!part.generator.config?.douse) continue;
+      part.generator.setWetness?.(this.weather.wetnessAt(part.emitter.x, part.emitter.y));
+    }
+  }
+
+  /** Les régions ont changé : intérieurs de la météo recalculés. */
+  refreshRegions() {
+    this.weather.refreshRegions();
+    this.#applyWetness();
+  }
+
+  /**
+   * Relit régulièrement l'obscurité de la scène (elle peut s'animer de jour à nuit)
+   * et la pluie reçue par les flammes (elle suit les fondus de la météo).
+   */
   #startDarknessWatch() {
     if (this.#darknessTimer) return;
     const tick = () => {
+      this.#applyWetness();
       const dk = sceneDarkness();
       if (Math.abs(dk - this.#darkness) < 0.005) return;
       this.#darkness = dk;
@@ -256,6 +280,7 @@ export class EmitterManager {
   /** Arrête tous les générateurs et leurs lumières (changement de scène, désactivation). */
   clear() {
     this.#stopDarknessWatch();
+    this.weather.clear();
     this.tokens.clear();
     this.lights.clear();
     for (const id of [...this.#active.keys()]) this.#destroy(id);
@@ -334,8 +359,9 @@ export class EmitterManager {
         ticker: canvasTicker(),
         // Heure du serveur : les rafales (et donc les extinctions) tombent au même moment pour tous
         clock: () => game.time?.serverTime ?? Date.now(),
-        onExtinguish: ({ x, y }) =>
+        onExtinguish: ({ x, y }, reason) =>
           spawnPuff({
+            steam: reason === "rain",
             container: createSceneContainer(cfg.elevation),
             ticker: canvasTicker(),
             x,

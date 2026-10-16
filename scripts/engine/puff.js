@@ -19,9 +19,10 @@ const PUFF_LIFE = 1500;
  * @param {number} [options.gridScale]       Taille de case / 100
  * @param {{x: number, y: number}} [options.wind]  Vent actuel (px/s), pour emporter la fumée
  * @param {number} [options.size]            Multiplicateur de taille de l'émetteur
+ * @param {boolean} [options.steam]          Vapeur (flamme éteinte par la pluie) au lieu de fumée
  * @returns {EmberParticleSystem}
  */
-export function spawnPuff({ container, ticker, x, y, getTexture, gridScale = 1, wind = { x: 0, y: 0 }, size = 1 }) {
+export function spawnPuff({ container, ticker, x, y, getTexture, gridScale = 1, wind = { x: 0, y: 0 }, size = 1, steam = false }) {
   const g = gridScale;
   const modes = globalThis.PIXI?.BLEND_MODES;
   const system = new EmberParticleSystem(
@@ -37,7 +38,8 @@ export function spawnPuff({ container, ticker, x, y, getTexture, gridScale = 1, 
       wind: { x: wind.x * 0.8, y: wind.y * 0.8 },
       scale: { curve: [{ time: 0, value: 0.1 * g * size }, { time: 1, value: 0.38 * g * size }] },
       alpha: { curve: [{ time: 0, value: 0 }, { time: 0.15, value: 0.6 }, { time: 1, value: 0 }] },
-      tint: { curve: [{ time: 0, value: 0x8a8580 }, { time: 1, value: 0x4a4744 }] },
+      // Vapeur blanche quand c'est la pluie qui éteint la flamme, fumée grise sinon
+      tint: { curve: steam ? [{ time: 0, value: 0xe8ecef }, { time: 1, value: 0xaab2b8 }] : [{ time: 0, value: 0x8a8580 }, { time: 1, value: 0x4a4744 }] },
       rotation: { spread: Math.PI, speed: { min: -30, max: 30 } },
       drift: { enabled: true, intensity: 0.3 },
       gridScale: g,

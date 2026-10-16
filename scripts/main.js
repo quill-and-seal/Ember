@@ -8,7 +8,8 @@ import { PRESETS, allPresets, getPreset, registerPreset } from "./presets.js";
 import { GROUPS, allGroups, getGroup, registerGroup } from "./groups.js";
 import { EmitterManager } from "./emitter-manager.js";
 import { createEmberLayerClass } from "./emitter-layer.js";
-import { EmitterList, PresetPicker, WindConfig, openApps, openEmitterConfig } from "./apps.js";
+import { EmitterList, PresetPicker, WeatherConfig, openApps, openEmitterConfig } from "./apps.js";
+import { WEATHER_TYPES, WEATHER_AMBIANCES } from "./weather-presets.js";
 
 const manager = new EmitterManager();
 
@@ -57,6 +58,19 @@ Hooks.once("init", () => {
     }
   });
 
+  game.settings.register(MODULE_ID, "weatherFlash", {
+    name: "EMBER.Settings.WeatherFlash.Name",
+    hint: "EMBER.Settings.WeatherFlash.Hint",
+    scope: "client",
+    config: true,
+    type: Boolean,
+    default: true,
+    onChange: () => {
+      manager.weather.clear();
+      manager.sync();
+    }
+  });
+
   CONFIG.Canvas.layers[LAYER_NAME] = {
     layerClass: createEmberLayerClass({
       manager,
@@ -83,7 +97,13 @@ Hooks.once("init", () => {
     getGenerators: (id) => manager.getGenerators(id),
     getWind: (scene) => manager.getWind(scene),
     setWind: (changes, scene) => manager.setWind(changes, scene),
-    openWind: () => new WindConfig(manager).render({ force: true }),
+    weatherTypes: WEATHER_TYPES,
+    weatherAmbiances: WEATHER_AMBIANCES,
+    getWeather: (scene) => manager.weather.getWeather(scene),
+    setWeather: (changes, scene) => manager.weather.setWeather(changes, scene),
+    applyAmbiance: (id, scene) => applyAmbiance(id, scene),
+    openWeather: () => new WeatherConfig(manager).render({ force: true }),
+    openWind: () => new WeatherConfig(manager).render({ force: true }),
     openPicker: () => new PresetPicker().render({ force: true }),
     openList: () => new EmitterList(manager).render({ force: true })
   };
@@ -119,12 +139,12 @@ Hooks.on("getSceneControlButtons", (controls) => {
       order: 3,
       ...button(() => new EmitterList(manager).render({ force: true }))
     },
-    wind: {
-      name: "wind",
-      title: "EMBER.Controls.Wind",
-      icon: "fa-solid fa-wind",
+    weather: {
+      name: "weather",
+      title: "EMBER.Controls.Weather",
+      icon: "fa-solid fa-cloud-sun-rain",
       order: 4,
-      ...button(() => new WindConfig(manager).render({ force: true }))
+      ...button(() => new WeatherConfig(manager).render({ force: true }))
     },
     clear: {
       name: "clear",
@@ -174,7 +194,22 @@ Hooks.on("canvasReady", () => {
 Hooks.on("canvasTearDown", () => manager.clear());
 
 // Foundry réinitialise ses lumières (mur modifié, lumière ajoutée…) : on remet les nôtres.
-Hooks.on("initializeLightSources", () => manager.lights.onInitializeLightSources());
+Hooks.on("initializeLightSources", () => {
+  manager.lights.onInitializeLightSources();
+  manager.weather.onInitializeLightSources();
+});
+
+// Régions « Supprimer la météo » : les intérieurs restent à l'abri de la pluie
+let regionsTimer = null;
+const onRegionChange = (doc) => {
+  const scene = doc.parent?.documentName === "Scene" ? doc.parent : doc.parent?.parent;
+  if (scene?.id !== canvas.scene?.id) return;
+  clearTimeout(regionsTimer);
+  regionsTimer = setTimeout(() => manager.refreshRegions(), 50);
+};
+for (const hook of ["createRegion", "updateRegion", "deleteRegion", "createRegionBehavior", "updateRegionBehavior", "deleteRegionBehavior"]) {
+  Hooks.on(hook, onRegionChange);
+}
 
 // Murs posés, déplacés, supprimés, portes ouvertes ou fermées : la fumée suit
 // (petit délai : Foundry met d'abord à jour ses arêtes de collision)
@@ -196,6 +231,14 @@ Hooks.on("updateScene", (scene, changes) => {
   refreshOpenApps();
 });
 
+/** Applique une ambiance toute prête : météo et vent (la direction du vent est gardée). */
+async function applyAmbiance(id, scene = canvas.scene) {
+  const amb = WEATHER_AMBIANCES[id];
+  if (!amb) throw new Error(`Ember | ambiance inconnue : ${id}`);
+  await manager.weather.setWeather(amb.weather, scene);
+  await manager.setWind(amb.wind, scene);
+}
+
 Hooks.once("ready", () => {
   log(`Prêt — ${Object.keys(allPresets()).length} effets, ${Object.keys(allGroups()).length} groupes, flag « ${FLAG_EMITTERS} ».`);
   if (game.user.isGM && game.settings.get(MODULE_ID, "engine") === "core") {
@@ -208,7 +251,7 @@ Hooks.once("ready", () => {
 /* -------------------------------------------- */
 
 /** Ce que perd un émetteur avec le générateur de Foundry (affiché dans l'avertissement). */
-const CORE_LOSSES = ["Height", "Wind", "Blowout", "Light", "World"];
+const CORE_LOSSES = ["Height", "Wind", "Blowout", "Light", "World", "Weather"];
 
 /**
  * Dans les réglages du module, choisir « Foundry » ouvre un avertissement.

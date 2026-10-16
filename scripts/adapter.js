@@ -246,6 +246,9 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     windEffects: preset.windEffects ?? null,
     // Flamme fragile, sauf si le MJ a désactivé l'extinction sur cet émetteur
     blowout: preset.blowout && emitter.blowout !== false ? { ...preset.blowout } : null,
+    // Flamme qui craint la pluie (météo), sauf si l'émetteur est abrité
+    douse: preset.douse && emitter.sheltered !== true ? preset.douse : null,
+    wetness: 0,
     // Gerbes : paquets de particules d'un coup (le nombre suit la densité)
     bursts: preset.bursts
       ? {
@@ -304,7 +307,7 @@ export function blockedByWalls(emitter, preset) {
 
 /** Clés comprises uniquement par le moteur maison. */
 const EMBER_ONLY_KEYS = [
-  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "bursts", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
+  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "bursts", "douse", "wetness", "exclude", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
   "groundFade", "perspective", "gravity", "prewarm", "gridScale"
 ];
 

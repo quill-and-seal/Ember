@@ -10,6 +10,9 @@ export const FLAG_EMITTERS = "emitters";
 /** Clé du flag de scène qui contient le vent. */
 export const FLAG_WIND = "wind";
 
+/** Flag de la scène qui stocke la météo. */
+export const FLAG_WEATHER = "weather";
+
 /**
  * Vent de scène par défaut.
  * direction : vers où souffle le vent, en degrés (0 = vers le haut de la carte, 90 = vers la droite).
@@ -55,6 +58,8 @@ export const EMITTER_DEFAULTS = Object.freeze({
   walls: true,
   tokens: true,
   darkness: true,
+  // Météo : à l'abri de la pluie (sous un auvent…), même hors d'une région « supprimer la météo »
+  sheltered: false,
   // Groupes : réglages par effet { [preset]: { off, density } }
   layers: null
 });

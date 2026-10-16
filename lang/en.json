@@ -7,7 +7,8 @@
       "List": "Scene emitters",
       "Clear": "Delete all emitters",
       "ClearConfirm": "Delete every particle emitter on this scene?",
-      "Wind": "Scene wind"
+      "Wind": "Scene wind",
+      "Weather": "Scene weather and wind"
     },
     "Preset": {
       "campfire": "Fire",
@@ -71,6 +72,10 @@
       "Performance": {
         "Name": "Particle quality",
         "Hint": "Reduces how many particles are drawn on this computer. Useful for modest machines."
+      },
+      "WeatherFlash": {
+        "Name": "Lightning flash",
+        "Hint": "Uncheck if flashing lights bother you: lightning will no longer light up your screen (rain and storms remain). Setting for this computer only."
       }
     },
     "Error": {
@@ -144,7 +149,8 @@
         "Wind": "live wind, gusts and wind reactions (frozen at creation only)",
         "Blowout": "flame flicker, blow-out and relighting",
         "Light": "adaptive light",
-        "World": "world reactions: walls, tokens and darkness"
+        "World": "world reactions: walls, tokens and darkness",
+        "Weather": "the weather (rain, snow, sand, ash, mist, lightning)"
       },
       "WarnOutro": "This applies to every player. You can switch back to the Ember engine at any time.",
       "WarnYes": "Use Foundry's generator",
@@ -160,7 +166,9 @@
       "Darkness": "Reacts to darkness",
       "DarknessHint": "The effect changes with the scene's darkness.",
       "DarknessNight": "Only appears in darkness: invisible on a daylight scene. Uncheck to show it at any time.",
-      "EmberOnly": "World reactions only work with the Ember engine."
+      "EmberOnly": "World reactions only work with the Ember engine.",
+      "Sheltered": "Sheltered from rain",
+      "ShelteredHint": "Under an awning, a tent… Rain won't put it out. Inside a \"Suppress Weather\" region, this is automatic."
     },
     "Group": {
       "bonfire": "Campfire",
@@ -175,6 +183,36 @@
       "Title": "Group layers",
       "Hint": "Uncheck an effect to remove it from the group, or change its density. The emitter's size, density and radius apply to every layer.",
       "LeadHint": "Main layer: it carries the group's light and blowout."
+    },
+    "Weather": {
+      "Title": "Scene weather",
+      "Ambiances": "Ambiances",
+      "Sky": "Weather",
+      "KindLabel": "Sky",
+      "Intensity": "Intensity",
+      "Fog": "Mist",
+      "Lightning": "Lightning",
+      "LightningHint": "Lightning briefly lights up the whole scene, at the same moment for every player. Each player can turn off the flash in their settings.",
+      "Indoors": "It doesn't rain in regions with the \"Suppress Weather\" behavior: interiors stay dry, and so do the fires inside them.",
+      "EmberOnly": "Ember's weather only works with the Ember engine (module settings). With Foundry's generator, use the scene's built-in weather.",
+      "Kind": {
+        "none": "None",
+        "rain": "Rain",
+        "snow": "Snow",
+        "sand": "Sandstorm",
+        "ash": "Ashfall"
+      },
+      "Ambiance": {
+        "clear": "Clear sky",
+        "drizzle": "Drizzle",
+        "shower": "Shower",
+        "storm": "Thunderstorm",
+        "snow": "Light snow",
+        "blizzard": "Blizzard",
+        "sandstorm": "Sandstorm",
+        "ashfall": "Ashfall",
+        "fog": "Fog"
+      }
     }
   }
 }

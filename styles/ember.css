@@ -201,3 +201,26 @@
 .ember .ember-layers .ember-layer.off .ember-range {
   opacity: 0.45;
 }
+
+/* Météo */
+.ember-weather .ember-ambiances {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.ember-weather .ember-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  height: auto;
+  padding: 0.5rem 0.25rem;
+  line-height: 1.2;
+  font-size: 0.9em;
+}
+
+.ember-weather .ember-tile i {
+  font-size: 1.2rem;
+  color: var(--ember-accent);
+}

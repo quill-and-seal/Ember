@@ -38,6 +38,8 @@
  *   light       Lumière émise : { bright, dim } en cases, color, alpha (intensité 0..1),
  *               animation Foundry { type, speed, intensity }. Elle suit la flamme : éteinte
  *               quand la flamme est soufflée, plus forte quand le vent l'attise.
+ *   douse       Flamme qui craint la pluie : elle s'éteint quand la pluie reçue (0..1) atteint ce
+ *               seuil (1 = averse battante), dans un nuage de vapeur, et se rallume après l'averse.
  *   bursts      Gerbes au lieu d'un flot continu : { every: [min, max] ms entre deux gerbes,
  *               count: [min, max] particules par gerbe, spread: largeur du cône en degrés }
  *   drag        Frottement par seconde (0 = aucun)
@@ -64,6 +66,7 @@ import { getGroup, groupAsPreset } from "./groups.js";
 export const PRESETS = {
   campfire: {
     icon: "fa-solid fa-fire",
+    douse: 0.8,
     disturb: { wake: 0.2 },
     darkness: { alpha: [0.85, 1.15] },
     light: { bright: 4, dim: 8, color: "#ff9a3c", alpha: 0.5, animation: { type: "torch", speed: 3, intensity: 4 } },
@@ -87,6 +90,7 @@ export const PRESETS = {
 
   torch: {
     icon: "fa-solid fa-fire-flame-simple",
+    douse: 0.9,
     disturb: { wake: 0.2 },
     darkness: { alpha: [0.85, 1.15] },
     light: { bright: 4, dim: 8, color: "#ffb347", alpha: 0.45, animation: { type: "torch", speed: 4, intensity: 3 } },
@@ -111,6 +115,7 @@ export const PRESETS = {
 
   candle: {
     icon: "fa-solid fa-candle-holder",
+    douse: 0.25,
     disturb: { wake: 0.25 },
     darkness: { alpha: [0.85, 1.2] },
     light: { bright: 1, dim: 2, color: "#ffcf80", alpha: 0.4, animation: { type: "flame", speed: 2, intensity: 2 } },
@@ -158,6 +163,7 @@ export const PRESETS = {
 
   embers: {
     icon: "fa-solid fa-fire-flame-curved",
+    douse: 0.5,
     disturb: { push: 70, wake: 0.4 },
     darkness: { alpha: [0.75, 1.25] },
     light: { bright: 0, dim: 1.5, color: "#ff6a1a", alpha: 0.25 },

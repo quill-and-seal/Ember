@@ -35,7 +35,7 @@ Sur un émetteur posé :
 - **Glisser** la pastille pour le déplacer (maintiens **Maj** pour l'aimanter au centre d'une case).
 - **Clic droit** ou **double-clic** pour ouvrir ses réglages : effet, taille, densité, vitesse, rayon, couleur, élévation, actif, caché aux joueurs.
 
-L'outil **Vent de la scène** règle un vent qui pousse tous les effets de la scène : direction (rose des vents), force et rafales. Le vent agit de deux façons :
+L'outil **Météo et vent de la scène** règle un vent qui pousse tous les effets de la scène : direction (rose des vents), force et rafales. Le vent agit de deux façons :
 
 - **il déplace** les particules : la fumée et les feuilles s'envolent, le feu se couche à peine, la magie l'ignore ;
 - **il change le comportement** des effets : un feu s'attise (plus de flammes, plus hautes et plus vives), les braises s'arrachent en masse, la fumée et la brume se dissipent plus vite, les lucioles se cachent, la poussière se soulève. Les rafales font varier ces réactions : le feu se ravive à chaque coup de vent.
@@ -60,6 +60,21 @@ Les effets réagissent à la scène, sans rien écrire en base de données. Chaq
 - **Les murs arrêtent les particules** : la fumée reste dans la pièce et s'accumule contre les murs, et ne sort que par les portes ouvertes. Ouvrir ou fermer une porte met à jour la zone tout de suite. Les effets magiques (aura arcanique, lumière sacrée) traversent les murs.
 - **Les tokens dérangent les effets** : un token qui traverse une fumée ou une brume l'écarte et y laisse un sillage, il soulève les feuilles et la poussière, et les lucioles le fuient. Seuls les tokens que le joueur voit comptent : un token invisible ne se trahit pas par les particules.
 - **L'obscurité de la scène compte** : les lucioles n'apparaissent que dans le noir, les flammes, braises et magies ressortent la nuit, la fumée et la poussière s'y voient moins. Les transitions de jour à nuit sont suivies en direct.
+
+### Météo (moteur Ember)
+
+L'outil **Météo et vent de la scène** règle le temps qu'il fait, pour tous les joueurs :
+
+- **Ambiances** toutes prêtes, qui règlent la météo et le vent d'un clic : temps clair, bruine, averse, orage, neige légère, blizzard, tempête de sable, pluie de cendres, brouillard.
+- **Temps** : pluie, neige, tempête de sable ou pluie de cendres, avec son intensité. **Brume** : un curseur à part, qui peut accompagner n'importe quel temps. **Éclairs** : à cocher.
+- Pensée pour la **vue du dessus** : la pluie tombe vers le sol (les gouttes rapetissent en descendant) et éclabousse en petits anneaux, la neige se pose puis fond, le sable file au ras du sol, les cendres tourbillonnent en tombant. Le vent de la scène pousse tout.
+- Les particules sont **accrochées à la carte**, comme les tokens : quand on déplace la vue ou qu'on dézoome, chaque goutte reste à sa place sur la scène. Elles ne naissent que dans la partie visible (plus une marge), et une zone qui apparaît à l'écran est remplie tout de suite : aucun trou au dézoom. Le réglage « Qualité des particules » plafonne leur nombre.
+- **Les intérieurs restent au sec** : il ne pleut pas dans les régions qui ont le comportement « Supprimer la météo » de Foundry, et le voile de la météo n'y passe pas.
+- **La pluie éteint les feux exposés** dans un nuage de vapeur, puis ils se rallument un moment après l'averse : une bougie ne tient pas sous la bruine, un feu de camp résiste à l'averse mais pas à l'orage, une torche tient presque tout. Un feu dans un intérieur reste allumé ; l'option « À l'abri de la pluie » d'un émetteur fait de même ailleurs (auvent, tente).
+- **Éclairs** : ils illuminent toute la scène un court instant (une vraie lumière, qui compte pour la vision), au même moment pour tous les joueurs. Chaque joueur peut couper le flash dans ses réglages (« Flash des éclairs ») s'il est sensible aux lumières clignotantes.
+- Les changements de météo passent par un **fondu** de quelques secondes ; en arrivant sur une scène où il pleut déjà, la pluie est là tout de suite.
+
+La météo d'Ember ne fonctionne qu'avec le moteur Ember. Avec le générateur de Foundry, la météo intégrée de la scène reste disponible ; évite de cumuler les deux.
 
 ### Groupes d'effets
 
@@ -107,6 +122,11 @@ await ember.deleteEmitter(id);
 // Vent de la scène (direction en degrés : 0 = vers le haut de la carte, 90 = vers la droite)
 await ember.setWind({ enabled: true, direction: 225, strength: 60, gusts: 0.4 });
 
+// Météo : kind = "none" | "rain" | "snow" | "sand" | "ash", intensité et brume de 0 à 1
+await ember.setWeather({ kind: "rain", intensity: 0.8, fog: 0.2, lightning: true });
+// ou une ambiance toute prête (météo + vent) : clear, drizzle, shower, storm, snow, blizzard, sandstorm, ashfall, fog
+await ember.applyAmbiance("storm");
+
 // Ajouter un effet personnalisé (même format que scripts/presets.js)
 ember.registerPreset("frost", {
   label: "Givre",
@@ -145,7 +165,7 @@ ember.registerGroup("brazier", {
 - [x] Groupes d'effets (feu de camp, forge, chaudron…)
 - [ ] Effets attachés aux tokens (auras qui suivent le token)
 - [ ] Effets ponctuels déclenchés (explosions, impacts, projectiles)
-- [ ] Météo plein écran (pluie, neige, cendres)
+- [x] Météo vue du dessus (pluie, neige, sable, cendres, brume, éclairs), intérieurs au sec, la pluie éteint les feux
 - [ ] Éditeur visuel avec aperçu, presets personnels, export/import JSON
 
 ## Publier une version

@@ -133,6 +133,19 @@ export class EmberParticleSystem {
     this.config.bounds = bounds ?? null;
   }
 
+  /**
+   * Pluie reçue par l'effet (0 = sec, 1 = averse battante). Une flamme qui craint la pluie
+   * (douse) s'éteint au-delà de son seuil et se rallume quand la pluie retombe.
+   */
+  setWetness(level) {
+    this.config.wetness = Math.min(1, Math.max(0, Number(level) || 0));
+  }
+
+  /** Zone interdite { contains(x, y) } (intérieurs pour la météo) : rien n'y naît, tout y disparaît. */
+  setExclude(zone) {
+    this.config.exclude = zone ?? null;
+  }
+
   /** Change l'obscurité de la scène en direct (0 = jour, 1 = nuit). */
   setDarkness(level) {
     this.config.darkness = Math.min(1, Math.max(0, Number(level) || 0));
@@ -181,11 +194,15 @@ export class EmberParticleSystem {
    */
   _updateFlame(air, ms) {
     const blow = this.config.blowout;
-    if (!blow?.threshold) {
+    const douse = this.config.douse;
+    if (!blow?.threshold && !douse) {
       this._flicker = 0;
       return;
     }
-    const ratio = air / blow.threshold;
+    // Le vent et la pluie menacent la flamme ; c'est le plus fort des deux qui compte.
+    const windRatio = blow?.threshold ? air / blow.threshold : 0;
+    const wetRatio = douse ? (this.config.wetness ?? 0) / douse : 0;
+    const ratio = Math.max(windRatio, wetRatio);
     this._flicker = this.lit ? Math.min(1, Math.max(0, (ratio - 0.6) / 0.4)) : 0;
 
     if (this.lit && ratio >= 1) {
@@ -193,10 +210,13 @@ export class EmberParticleSystem {
       this._calmMs = 0;
       // Les flammes en cours sont soufflées presque instantanément.
       for (const p of this.particles) p.life = Math.min(p.life, p.age + 120);
-      this.onExtinguish?.(this.center);
+      this._outBy = wetRatio >= windRatio ? "rain" : "wind";
+      this.onExtinguish?.(this.center, this._outBy);
     } else if (!this.lit) {
       this._calmMs = ratio < 0.7 ? this._calmMs + ms : 0;
-      if (this._calmMs >= (blow.relightDelay ?? 2500)) {
+      // Après la pluie, il faut plus longtemps pour rallumer
+      const delay = this._outBy === "rain" ? 6000 : blow?.relightDelay ?? 2500;
+      if (this._calmMs >= delay) {
         this.lit = true;
         this._calmMs = 0;
         this.onRelight?.(this.center);
@@ -346,6 +366,7 @@ export class EmberParticleSystem {
     const align = !!cfg.rotation?.alignVelocity;
     const { x: cx, y: cy } = this.center;
     const bounds = cfg.bounds ?? null;
+    const exclude = cfg.exclude ?? null;
     const disturb = cfg.disturb ?? null;
     const disturbers = disturb && this.getDisturbers ? this.getDisturbers() : null;
     const hasDisturbers = !!disturbers?.length;
@@ -393,6 +414,12 @@ export class EmberParticleSystem {
         p.y = oy;
         p.vx *= -0.3;
         p.vy *= -0.3;
+      }
+
+      // Zone interdite (intérieur, pour la météo) : la particule disparaît
+      if (exclude && exclude.contains(p.x, p.y)) {
+        this._recycle(i);
+        continue;
       }
 
       // Hauteur
@@ -477,6 +504,20 @@ export class EmberParticleSystem {
         ok = bounds.contains(x, y);
       }
       if (!ok) ({ x, y } = this.center);
+    }
+    const exclude = cfg.exclude;
+    if (exclude && exclude.contains(x, y)) {
+      let ok = false;
+      for (let i = 0; i < 4 && !ok; i++) {
+        ({ x, y } = this._samplePosition());
+        ok = !exclude.contains(x, y);
+      }
+      // Pas de place dehors : la particule ne naît pas (elle retourne dans la réserve)
+      if (!ok) {
+        p.visible = false;
+        this.pool.push(p);
+        return null;
+      }
     }
     const { x: cx, y: cy } = this.center;
     p.x = x;

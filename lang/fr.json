@@ -7,7 +7,8 @@
       "List": "Émetteurs de la scène",
       "Clear": "Supprimer tous les émetteurs",
       "ClearConfirm": "Supprimer tous les émetteurs de particules de cette scène ?",
-      "Wind": "Vent de la scène"
+      "Wind": "Vent de la scène",
+      "Weather": "Météo et vent de la scène"
     },
     "Preset": {
       "campfire": "Feu",
@@ -71,6 +72,10 @@
       "Performance": {
         "Name": "Qualité des particules",
         "Hint": "Réduit le nombre de particules affichées sur cet ordinateur. Utile pour les machines modestes."
+      },
+      "WeatherFlash": {
+        "Name": "Flash des éclairs",
+        "Hint": "Décoche si les lumières clignotantes te gênent : les éclairs n'illumineront plus ton écran (la pluie et l'orage restent). Réglage propre à cet ordinateur."
       }
     },
     "Error": {
@@ -144,7 +149,8 @@
         "Wind": "le vent en direct, les rafales et les réactions au vent (seulement figées à la création)",
         "Blowout": "le vacillement, l'extinction et le rallumage des flammes",
         "Light": "la lumière adaptative",
-        "World": "les réactions au monde : murs, tokens et obscurité"
+        "World": "les réactions au monde : murs, tokens et obscurité",
+        "Weather": "la météo (pluie, neige, sable, cendres, brume, éclairs)"
       },
       "WarnOutro": "Le changement s'applique à tous les joueurs. Tu peux revenir au moteur Ember à tout moment.",
       "WarnYes": "Utiliser le générateur de Foundry",
@@ -160,7 +166,9 @@
       "Darkness": "Réagit à l'obscurité",
       "DarknessHint": "L'effet change d'aspect selon l'obscurité de la scène.",
       "DarknessNight": "N'apparaît que dans l'obscurité : invisible sur une scène en plein jour. Décoche pour l'afficher à toute heure.",
-      "EmberOnly": "Les réactions au monde ne fonctionnent qu'avec le moteur Ember."
+      "EmberOnly": "Les réactions au monde ne fonctionnent qu'avec le moteur Ember.",
+      "Sheltered": "À l'abri de la pluie",
+      "ShelteredHint": "Sous un auvent, une tente… La pluie ne l'éteint pas. Dans une région « Supprimer la météo », c'est automatique."
     },
     "Group": {
       "bonfire": "Feu de camp",
@@ -175,6 +183,36 @@
       "Title": "Couches du groupe",
       "Hint": "Décoche un effet pour le retirer du groupe, ou change sa densité. La taille, la densité et le rayon de l'émetteur s'appliquent à toutes les couches.",
       "LeadHint": "Couche principale : elle porte la lumière et l'extinction du groupe."
+    },
+    "Weather": {
+      "Title": "Météo de la scène",
+      "Ambiances": "Ambiances",
+      "Sky": "Météo",
+      "KindLabel": "Temps",
+      "Intensity": "Intensité",
+      "Fog": "Brume",
+      "Lightning": "Éclairs",
+      "LightningHint": "Des éclairs illuminent toute la scène un court instant, au même moment pour tous les joueurs. Chaque joueur peut couper le flash dans ses réglages.",
+      "Indoors": "Il ne pleut pas dans les régions qui ont le comportement « Supprimer la météo » : les intérieurs restent au sec, et les feux qui s'y trouvent aussi.",
+      "EmberOnly": "La météo d'Ember ne fonctionne qu'avec le moteur Ember (réglages du module). Avec le générateur de Foundry, utilise la météo intégrée de la scène.",
+      "Kind": {
+        "none": "Aucun",
+        "rain": "Pluie",
+        "snow": "Neige",
+        "sand": "Tempête de sable",
+        "ash": "Pluie de cendres"
+      },
+      "Ambiance": {
+        "clear": "Temps clair",
+        "drizzle": "Bruine",
+        "shower": "Averse",
+        "storm": "Orage",
+        "snow": "Neige légère",
+        "blizzard": "Blizzard",
+        "sandstorm": "Tempête de sable",
+        "ashfall": "Pluie de cendres",
+        "fog": "Brouillard"
+      }
     }
   }
 }

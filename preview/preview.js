@@ -6,6 +6,8 @@
 
 import { PRESETS, getPreset, getEffect } from "../scripts/presets.js";
 import { GROUPS, expandEmitter } from "../scripts/groups.js";
+import { WeatherSystem } from "../scripts/engine/weather.js";
+import { WEATHER_AMBIANCES } from "../scripts/weather-presets.js";
 import { buildConfig, buildArea, computeWind, finalizeConfig, presetRadius } from "../scripts/adapter.js";
 import { getParticleTexture } from "../scripts/textures.js";
 import { EmberParticleSystem } from "../scripts/engine/particle-system.js";
@@ -109,6 +111,7 @@ function applyWorld() {
     sys.setDarkness(world.darkness);
     sys.setBounds(world.room && sys.config.walls !== false ? roomBounds() : null);
   }
+  applyRoomToWeather();
   drawNight();
   drawWalls();
   token.visible = world.token;
@@ -160,6 +163,7 @@ function rebuild() {
   system = lead ?? parts[0]?.sys ?? null;
   applyWorld();
   for (const { sys } of parts) sys.start();
+  if (weather.root) app.stage.addChild(weather.root);
   app.stage.addChild(walls);
   app.stage.addChild(token);
   app.stage.addChild(marker);
@@ -176,6 +180,7 @@ function applyWind() {
     const { wind: v, gust, airflow } = computeWind(part.emitter, part.preset, wind, { gridPx: GRID });
     sys.setWind(v, gust, airflow);
   }
+  weather.setWind(wind);
   document.getElementById("wind-behavior").textContent = BEHAVIOR[state.preset] ?? "—";
   document.getElementById("wind-arrow").style.setProperty("--deg", `${wind.direction}deg`);
   document.getElementById("wind-dir-out").textContent = `${wind.direction}°`;
@@ -198,6 +203,7 @@ function moveTo(x, y) {
   }
   drawWalls();
   drawMarker();
+  if (world.room) applyRoomToWeather();
 }
 
 /* -------------------------------------------- */
@@ -366,6 +372,77 @@ setInterval(() => {
   document.getElementById("wind-live").textContent =
     (wind.enabled && r ? `débit ${r.rate.toFixed(2)}× · taille ${r.scale.toFixed(2)}×` : "calme") + flame;
 }, 200);
+
+/* -------------------------------------------- */
+/*  Météo                                       */
+/* -------------------------------------------- */
+
+const sky = { kind: "none", intensity: 0.7, fog: 0, lightning: false };
+const AMBIANCE_LABELS = {
+  clear: "Temps clair", drizzle: "Bruine", shower: "Averse", storm: "Orage", snow: "Neige légère",
+  blizzard: "Blizzard", sandstorm: "Tempête de sable", ashfall: "Pluie de cendres", fog: "Brouillard"
+};
+const weather = new WeatherSystem({
+  createContainer: () => {
+    const c = new PIXI.Container();
+    app.stage.addChild(c);
+    return c;
+  },
+  getView: () => {
+    const r = { x: 0, y: 0, width: app.screen.width, height: app.screen.height };
+    return { view: r, scene: r };
+  },
+  getTexture: getParticleTexture,
+  ticker: app.ticker,
+  gridPx: GRID,
+  clock: () => Date.now()
+});
+weather.start();
+
+/** La pièce fermée est un intérieur : il n'y pleut pas. */
+function applyRoomToWeather() {
+  if (!world.room) return weather.setExclude(null, []);
+  const left = state.x - ROOM.w / 2, top = state.y - ROOM.h / 2;
+  const zone = { contains: (x, y) => x > left && x < left + ROOM.w && y > top && y < top + ROOM.h };
+  weather.setExclude(zone, [[left, top, left + ROOM.w, top, left + ROOM.w, top + ROOM.h, left, top + ROOM.h]]);
+}
+
+function applySky() {
+  weather.setWeather(sky);
+  document.getElementById("w-kind").value = sky.kind;
+  document.getElementById("w-int").value = sky.intensity;
+  document.getElementById("w-int-out").textContent = `${Math.round(sky.intensity * 100)} %`;
+  document.getElementById("w-fog").value = sky.fog;
+  document.getElementById("w-fog-out").textContent = `${Math.round(sky.fog * 100)} %`;
+  document.getElementById("w-light").checked = sky.lightning;
+}
+
+document.getElementById("ambiances").innerHTML = Object.keys(WEATHER_AMBIANCES)
+  .map((id) => `<button type="button" class="preset" data-amb="${id}"><span>${AMBIANCE_LABELS[id]}</span></button>`)
+  .join("");
+document.getElementById("ambiances").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-amb]");
+  if (!btn) return;
+  const amb = WEATHER_AMBIANCES[btn.dataset.amb];
+  Object.assign(sky, amb.weather);
+  if (sky.kind === "none" && amb.weather.intensity === 0) sky.intensity = 0.7;
+  Object.assign(wind, amb.wind);
+  document.getElementById("wind-on").checked = wind.enabled;
+  for (const [id, key] of [["wind-strength", "strength"], ["wind-gusts", "gusts"]]) document.getElementById(id).value = wind[key];
+  applySky();
+  applyWind();
+});
+document.getElementById("w-kind").addEventListener("change", (e) => { sky.kind = e.target.value; applySky(); });
+document.getElementById("w-int").addEventListener("input", (e) => { sky.intensity = Number(e.target.value); applySky(); });
+document.getElementById("w-fog").addEventListener("input", (e) => { sky.fog = Number(e.target.value); applySky(); });
+document.getElementById("w-light").addEventListener("change", (e) => { sky.lightning = e.target.checked; applySky(); });
+
+// Pluie reçue par les flammes : rien dans la pièce fermée
+setInterval(() => {
+  const wet = world.room ? 0 : weather.wetness();
+  for (const { sys } of parts) if (sys.config.douse) sys.setWetness(wet);
+  document.getElementById("w-wet").textContent = `${Math.round(wet * 100)} %`;
+}, 250);
 
 // Démarrage
 function center() {
