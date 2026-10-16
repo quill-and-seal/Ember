@@ -15,10 +15,14 @@ const HANDLE_RADIUS = 14;
 const COLOR_ACCENT = 0xff8a3d;
 const COLOR_DISABLED = 0x8a8a8a;
 const DOUBLE_CLICK_MS = 350;
+/** Au-delà de ce déplacement (px écran), ce n'est plus un clic mais un glisser (sélection, déplacement de vue). */
+const CLICK_TOLERANCE = 6;
 
 /** Outil actif dans la barre de contrôles (compatible v12 et v13+). */
 export function activeToolName() {
-  return ui.controls?.tool?.name ?? ui.controls?.activeTool ?? null;
+  const tool = ui.controls?.tool;
+  if (typeof tool === "string") return tool;
+  return tool?.name ?? ui.controls?.activeTool ?? null;
 }
 
 export function createEmberLayerClass({ manager, openConfig }) {
@@ -33,6 +37,12 @@ export function createEmberLayerClass({ manager, openConfig }) {
 
     /** Dernier clic sur une poignée, pour détecter le double-clic. */
     #lastClick = { id: null, time: 0 };
+
+    /** Pointeur enfoncé sur la scène (pose d'un émetteur). */
+    #press = null;
+
+    /** Dernière pose, pour ne pas poser deux fois si Foundry relaie aussi le clic. */
+    #lastPlace = 0;
 
     static get layerOptions() {
       return foundry.utils.mergeObject(super.layerOptions, {
@@ -49,11 +59,20 @@ export function createEmberLayerClass({ manager, openConfig }) {
       await super._draw?.(options);
       this.handles = this.addChild(new PIXI.Container());
       this.handles.visible = false;
+      // Foundry v14 ne relaie pas toujours le clic de la scène au calque actif :
+      // le calque écoute lui-même le pointeur quand il est actif.
+      this.on("pointerdown", this.#onPointerDown, this);
+      this.on("pointerup", this.#onPointerUp, this);
+      this.on("pointerupoutside", () => (this.#press = null));
       this.refreshHandles();
     }
 
     async _tearDown(options) {
       this.#drag = null;
+      this.#press = null;
+      this.off("pointerdown", this.#onPointerDown, this);
+      this.off("pointerup", this.#onPointerUp, this);
+      this.removeAllListeners?.("pointerupoutside");
       this.handles = null;
       return super._tearDown?.(options);
     }
@@ -61,22 +80,51 @@ export function createEmberLayerClass({ manager, openConfig }) {
     _activate() {
       super._activate?.();
       if (this.handles) this.handles.visible = game.user.isGM;
+      // Le calque attrape les clics sur toute la scène tant qu'il est actif
+      this.eventMode = "static";
+      this.hitArea = canvas.dimensions?.rect ?? new PIXI.Rectangle(0, 0, canvas.dimensions.width, canvas.dimensions.height);
       this.refreshHandles();
     }
 
     _deactivate() {
       super._deactivate?.();
       if (this.handles) this.handles.visible = false;
+      this.eventMode = "passive";
+      this.hitArea = null;
+      this.#press = null;
     }
 
     /* -------------------------------------------- */
     /*  Pose d'un émetteur                          */
     /* -------------------------------------------- */
 
+    /** Clic relayé par Foundry (anciennes versions). */
     _onClickLeft(event) {
       super._onClickLeft?.(event);
-      if (!game.user.isGM || activeToolName() !== "place") return;
       const origin = event.interactionData?.origin ?? canvas.mousePosition;
+      this.#place(origin);
+    }
+
+    /** Pointeur enfoncé directement sur le calque (pas sur une poignée). */
+    #onPointerDown(event) {
+      if (event.button !== 0 || event.target !== this) return;
+      this.#press = { x: event.global.x, y: event.global.y, local: event.getLocalPosition(this) };
+    }
+
+    /** Relâché presque au même endroit : c'est un clic, on pose l'émetteur. */
+    #onPointerUp(event) {
+      const press = this.#press;
+      this.#press = null;
+      if (!press || event.button !== 0) return;
+      if (Math.hypot(event.global.x - press.x, event.global.y - press.y) > CLICK_TOLERANCE) return;
+      this.#place(press.local);
+    }
+
+    #place(origin) {
+      if (!origin || !game.user.isGM || activeToolName() !== "place") return;
+      const now = Date.now();
+      if (now - this.#lastPlace < 250) return;
+      this.#lastPlace = now;
       const preset = game.settings.get(MODULE_ID, "currentPreset");
       manager.create({ preset, x: Math.round(origin.x), y: Math.round(origin.y) });
     }

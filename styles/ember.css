@@ -123,7 +123,8 @@
   color: var(--ember-accent);
 }
 
-.ember-list .ember-row.disabled {
+.ember-list .ember-row.is-off > i:first-child,
+.ember-list .ember-row.is-off .name {
   opacity: 0.5;
 }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1
+
+- Correction : cliquer sur la scène avec l'outil « Poser un émetteur » ne créait rien sous Foundry v14 (le clic n'était plus relayé au calque). Le calque capte désormais le clic lui-même ; un glisser (sélection, déplacement de la vue) ne pose rien.
+- Correction : un émetteur désactivé ne pouvait plus être réactivé depuis la liste des émetteurs (ses boutons étaient bloqués par la classe « disabled » de Foundry).
+
 ## 0.4.0
 
 - **Météo vue du dessus** (#11), moteur Ember : pluie qui tombe vers le sol et éclabousse, neige qui se pose puis fond, tempête de sable au ras du sol, pluie de cendres, brume, éclairs. Le vent de la scène pousse tout.

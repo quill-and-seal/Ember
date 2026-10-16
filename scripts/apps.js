@@ -463,7 +463,7 @@ export class EmitterList extends EmberApp {
       .map((e) => {
         const p = getPreset(e.preset);
         return `
-        <li class="ember-row ${e.enabled ? "" : "disabled"}" data-id="${esc(e.id)}">
+        <li class="ember-row ${e.enabled ? "" : "is-off"}" data-id="${esc(e.id)}">
           <i class="${esc(p?.icon ?? "fa-solid fa-question")}"></i>
           <span class="name">${esc(e.label || presetLabel(e.preset))}${e.hidden ? ` <i class="fa-solid fa-eye-slash" data-tooltip="${t("Config.Hidden")}"></i>` : ""}</span>
           <a data-action="pan" data-tooltip="${t("List.Pan")}"><i class="fa-solid fa-location-crosshairs"></i></a>
