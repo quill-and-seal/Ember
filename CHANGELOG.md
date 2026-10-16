@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.3
+
+- Correction : en plein jour sur une carte claire, les flammes (feu, torche, bougie) formaient une grosse tache blanche. Leurs particules s'additionnaient à la couleur du sol jusqu'au blanc. Le jour, elles sont maintenant dessinées avec leurs vraies couleurs ; la nuit, elles redeviennent lumineuses (fusion additive) ; au crépuscule, le passage se fait en douceur (option `dayBlend` des presets).
+
 ## 0.4.2
 
 - Correction (pose par clic, suite) : le clic est maintenant lu directement sur le canvas, sans passer par les événements de Foundry, qui ne l'envoyaient pas au module sous v14. Un clic sur une poignée ou un glisser ne pose rien.

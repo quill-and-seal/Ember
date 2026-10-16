@@ -277,6 +277,7 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     prewarm: Math.max(...[].concat(preset.lifetime ?? [1000])),
     gridScale: g,
     _blend: preset.blend ?? "add",
+    _dayBlend: preset.dayBlend ?? null,
     _textures: preset.textures?.length ? preset.textures : ["glow"]
   };
 }
@@ -309,16 +310,20 @@ export function blockedByWalls(emitter, preset) {
 
 /** Clés comprises uniquement par le moteur maison. */
 const EMBER_ONLY_KEYS = [
-  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "bursts", "douse", "wetness", "exclude", "streak", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
+  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "bursts", "douse", "wetness", "exclude", "streak", "dayBlend", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
   "groundFade", "perspective", "gravity", "prewarm", "gridScale"
 ];
 
 /** Ajoute ce qui dépend de PIXI : textures et mode de fusion (PIXI 7 : nombres, PIXI 8 : chaînes). */
 export function finalizeConfig(cfg, getTexture) {
-  const { _blend, _textures, ...rest } = cfg;
+  const { _blend, _dayBlend, _textures, ...rest } = cfg;
   const modes = globalThis.PIXI?.BLEND_MODES;
-  const name = ["add", "screen", "normal"].includes(_blend) ? _blend : "normal";
-  rest.blend = modes ? modes[name.toUpperCase()] ?? modes.NORMAL : name;
+  const toMode = (b) => {
+    const name = ["add", "screen", "normal"].includes(b) ? b : "normal";
+    return modes ? modes[name.toUpperCase()] ?? modes.NORMAL : name;
+  };
+  rest.blend = toMode(_blend);
+  if (_dayBlend) rest.dayBlend = toMode(_dayBlend);
   rest.textures = _textures.map((id) => getTexture(id));
   if (rest.glow) {
     const { _texture, ...glow } = rest.glow;

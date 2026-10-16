@@ -510,6 +510,13 @@ export class EmberParticleSystem {
       this.container.addChild(p);
     }
     if (cfg.blend !== undefined) p.blendMode = cfg.blend;
+    // Flammes : la fusion additive blanchit tout sur une carte claire en plein jour.
+    // Le jour, les particules sont dessinées normalement (vraies couleurs), la nuit elles
+    // s'additionnent (lueur) ; au crépuscule, le mélange se fait particule par particule.
+    if (cfg.dayBlend !== undefined && cfg.dayBlend !== null) {
+      const night = Math.min(1, Math.max(0, ((cfg.darkness ?? 0) - 0.2) / 0.5));
+      if (rand() >= night) p.blendMode = cfg.dayBlend;
+    }
 
     // Position et élan dans le plan (pas d'apparition de l'autre côté d'un mur)
     let { x, y } = this._samplePosition();
