@@ -8,6 +8,23 @@
  */
 
 import { REFERENCE_GRID } from "./constants.js";
+import { isZone, zonePoints, polygonSpawnArea } from "./zones.js";
+
+/** Plafond de particules d'un effet étalé sur une zone, et du facteur de surface. */
+const ZONE_MAX_COUNT = 1500;
+const ZONE_MAX_FACTOR = 30;
+
+/**
+ * Facteur de quantité d'un effet en zone : la densité par case reste celle de l'effet seul.
+ * Un petit effet (une colonne de fumée) compte pour au moins une case.
+ */
+export function zoneFactor(emitter, preset, gridPx = REFERENCE_GRID) {
+  if (!isZone(emitter)) return 1;
+  const zoneCells = polygonSpawnArea(zonePoints(emitter)).area / (gridPx * gridPx);
+  const r = presetRadius(preset);
+  const naturalCells = Math.max(1, Math.PI * r * r);
+  return Math.min(ZONE_MAX_FACTOR, Math.max(1, zoneCells / naturalCells));
+}
 
 /* -------------------------------------------- */
 /*  Couleurs                                    */
@@ -213,12 +230,16 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
 
   const colorPoints = (emitter.color && curveFromColor(emitter.color)) || preset.color || [[0, "#ffffff"]];
   const air = computeWind(emitter, preset, wind, { gridPx });
+  const zone = isZone(emitter);
+  const k = zone ? zoneFactor(emitter, preset, gridPx) : 1;
 
   return {
     mode: "effect",
-    area: buildArea(preset.area, emitter.x, emitter.y, gridPx, emitter.radius),
-    count: Math.max(1, Math.round(preset.count * density)),
-    spawnRate: Math.max(0.1, preset.rate * density),
+    area: zone ? polygonSpawnArea(zonePoints(emitter)) : buildArea(preset.area, emitter.x, emitter.y, gridPx, emitter.radius),
+    count: Math.max(1, Math.min(zone ? ZONE_MAX_COUNT : Infinity, Math.round(preset.count * density * k))),
+    spawnRate: Math.max(0.1, preset.rate * density * k),
+    // Dans une zone, l'élan part dans une direction au hasard (pas du centre de la forme) et ne tourbillonne pas
+    radialRandom: zone,
     initial: 0,
     lifetime: preset.lifetime,
     velocity: {
@@ -241,7 +262,7 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     // (retirées ou approximées pour le générateur de Foundry).
     // Les accélérations suivent le carré de la vitesse pour garder les mêmes trajectoires.
     radial: scaleRange(preset.radial ?? [0, 0], g * speed),
-    swirl: scaleRange(preset.swirl ?? [0, 0], speed),
+    swirl: zone ? [0, 0] : scaleRange(preset.swirl ?? [0, 0], speed),
     wind: air.wind,
     gust: air.gust,
     airflow: air.airflow,
@@ -259,7 +280,7 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
           spread: preset.bursts.spread ?? 360
         }
       : null,
-    glow: buildGlow(emitter, preset, gridPx, glow),
+    glow: zone ? null : buildGlow(emitter, preset, gridPx, glow),
     // Réactions au monde (la zone des murs est fournie par le gestionnaire)
     disturb: emitter.tokens !== false && preset.disturb ? scaleDisturb(preset.disturb, g, speed) : null,
     darknessEffects: emitter.darkness !== false ? preset.darkness ?? null : null,
@@ -310,7 +331,7 @@ export function blockedByWalls(emitter, preset) {
 
 /** Clés comprises uniquement par le moteur maison. */
 const EMBER_ONLY_KEYS = [
-  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "bursts", "douse", "wetness", "exclude", "streak", "dayBlend", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
+  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "bursts", "douse", "wetness", "exclude", "streak", "dayBlend", "radialRandom", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
   "groundFade", "perspective", "gravity", "prewarm", "gridScale"
 ];
 
@@ -359,6 +380,8 @@ export function toCoreConfig(cfg) {
     if (out.scale?.curve) out.scale = { curve: out.scale.curve.map((p) => ({ ...p, value: p.value * m("scale") })) };
     if (out.alpha?.curve) out.alpha = { curve: out.alpha.curve.map((p) => ({ ...p, value: Math.min(1, p.value * m("alpha")) })) };
   }
+  // Le générateur de Foundry ne connaît pas les polygones : la zone devient son rectangle englobant
+  if (cfg.area?.points) out.area = { ...cfg.area.box };
   for (const key of EMBER_ONLY_KEYS) delete out[key];
   return out;
 }

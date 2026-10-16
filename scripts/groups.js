@@ -31,6 +31,7 @@
  */
 
 import { REFERENCE_GRID } from "./constants.js";
+import { isZone, POINT_ONLY } from "./zones.js";
 
 /** Six bougies en cercle, pour le cercle rituel. */
 function candleRing(n, r) {
@@ -198,6 +199,9 @@ export function expandEmitter(emitter, getPreset, gridPx = REFERENCE_GRID) {
   // Le rayon choisi par le MJ agrandit tout le groupe, décalages compris.
   const k = emitter.radius ? emitter.radius / natural : 1;
   const tweaks = emitter.layers ?? {};
+  // Groupe dans une zone : toutes les couches remplissent la même forme (pas de décalage ni de rayon),
+  // et les effets ponctuels (bougies, étincelles) sont retirés
+  const zone = isZone(emitter);
   const out = [];
   group.layers.forEach((layer, index) => {
     const base = getPreset(layer.preset);
@@ -206,10 +210,11 @@ export function expandEmitter(emitter, getPreset, gridPx = REFERENCE_GRID) {
     // Réglages du MJ par effet (toutes les bougies d'un cercle ensemble)
     const tweak = tweaks[layer.preset] ?? {};
     const isLead = index === lead;
+    if (zone && POINT_ONLY.has(layer.preset) && !isLead) return;
     // La couche principale ne se désactive pas : elle porte la lumière et l'extinction.
     if (tweak.off && !isLead) return;
-    const dx = (layer.offset?.x ?? 0) * k * gridPx;
-    const dy = (layer.offset?.y ?? 0) * k * gridPx;
+    const dx = zone ? 0 : (layer.offset?.x ?? 0) * k * gridPx;
+    const dy = zone ? 0 : (layer.offset?.y ?? 0) * k * gridPx;
     const radius = areaRadius(preset.area) * (layer.radius ?? 1) * k;
     out.push({
       index,

@@ -53,6 +53,7 @@
  */
 
 import { compileCurve, sampleColor, sampleCurve, sampleRange } from "./curves.js";
+import { pointInPolygon } from "../zones.js";
 
 /** Accélération de dérive (px/s²) pour une intensité de 1, à la taille de case de référence. */
 const DRIFT_ACCEL = 40;
@@ -269,6 +270,7 @@ export class EmberParticleSystem {
   /** Centre de la zone d'apparition (pour l'élan radial et le tourbillon). */
   get center() {
     const a = this.spawnArea ?? {};
+    if (a.points) return { x: a.cx, y: a.cy };
     if ("width" in a) return { x: a.x + a.width / 2, y: a.y + a.height / 2 };
     return { x: a.x ?? 0, y: a.y ?? 0 };
   }
@@ -558,7 +560,7 @@ export class EmberParticleSystem {
       const angle =
         this._burstDir != null
           ? this._burstDir + (rand() - 0.5) * this._burstSpread
-          : d > 0.5
+          : d > 0.5 && !cfg.radialRandom
             ? Math.atan2(dy, dx)
             : rand() * TAU;
       p.vx += Math.cos(angle) * radial;
@@ -639,6 +641,16 @@ export class EmberParticleSystem {
   _samplePosition() {
     const a = this.spawnArea ?? { x: 0, y: 0, radius: 0 };
     const rand = this.random;
+    // Zone dessinée : tirage dans le rectangle englobant, gardé s'il tombe dans la forme
+    if (a.points) {
+      const b = a.box;
+      for (let i = 0; i < 12; i++) {
+        const x = b.x + rand() * b.width;
+        const y = b.y + rand() * b.height;
+        if (pointInPolygon(a.points, x, y)) return { x, y };
+      }
+      return { x: a.cx, y: a.cy };
+    }
     if ("width" in a) {
       return { x: a.x + rand() * a.width, y: a.y + rand() * a.height };
     }

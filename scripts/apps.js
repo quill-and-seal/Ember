@@ -9,6 +9,8 @@ import { MODULE_ID, t } from "./constants.js";
 import { allPresets, getPreset, getEffect, presetLabel } from "./presets.js";
 import { allGroups, leadIndex } from "./groups.js";
 import { WEATHER_KINDS, WEATHER_AMBIANCES } from "./weather-presets.js";
+import { isZone, zoneAllowed } from "./zones.js";
+import { activeToolName } from "./emitter-layer.js";
 import { presetRadius } from "./adapter.js";
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -98,7 +100,12 @@ export class EmitterConfig extends EmberApp {
     if (!e) return `<p>${t("Config.Missing")}</p>`;
     const preset = getPreset(e.preset);
     const radius = e.radius ?? presetRadius(preset);
-    const opt = (id) => `<option value="${esc(id)}" ${id === e.preset ? "selected" : ""}>${esc(presetLabel(id))}</option>`;
+    const zone = isZone(e);
+    // Une zone ne propose pas les effets ponctuels (torche, bougie, étincelles)
+    const opt = (id) =>
+      zone && !zoneAllowed(id, getPreset(id)) && id !== e.preset
+        ? ""
+        : `<option value="${esc(id)}" ${id === e.preset ? "selected" : ""}>${esc(presetLabel(id))}</option>`;
     const options = `
       <optgroup label="${esc(t("Picker.Effects"))}">${Object.keys(allPresets()).map(opt).join("")}</optgroup>
       <optgroup label="${esc(t("Picker.Groups"))}">${Object.keys(allGroups()).map(opt).join("")}</optgroup>`;
@@ -145,14 +152,18 @@ export class EmitterConfig extends EmberApp {
           <div class="form-fields"><input type="checkbox" name="blowout" ${e.blowout !== false ? "checked" : ""}></div>
         </div>` : ""}
         <p class="hint ember-wind-reaction"><i class="fa-solid fa-wind"></i> ${t("Config.WindReaction")} : ${esc(behaviorKey ? game.i18n.localize(behaviorKey) : "—")}</p>
-        <div class="form-group">
+        ${
+          zone
+            ? `<p class="hint"><i class="fa-solid fa-draw-polygon"></i> ${t("Zone.ShapeHint")}</p>`
+            : `<div class="form-group">
           <label>${t("Config.Radius")}</label>
           <div class="form-fields ember-range">
             <input type="range" name="radius" min="0.05" max="6" step="0.05" value="${radius}">
             <output>${radius} ${t("Config.Cells")}</output>
             <button type="button" class="icon" data-action="resetRadius" data-tooltip="${t("Config.Reset")}"><i class="fa-solid fa-rotate-left"></i></button>
           </div>
-        </div>
+        </div>`
+        }
         <div class="form-group">
           <label>${t("Config.Color")}</label>
           <div class="form-fields">
@@ -167,7 +178,7 @@ export class EmitterConfig extends EmberApp {
         </div>
       </fieldset>
       ${preset?.group ? this._layersHtml(e, preset) : ""}
-      ${this._lightHtml(e, preset)}
+      ${zone ? `<fieldset><legend>${t("Light.Title")}</legend><p class="hint">${t("Zone.NoLight")}</p></fieldset>` : this._lightHtml(e, preset)}
       ${this._worldHtml(e, preset)}
       <footer class="ember-footer">
         <button type="button" data-action="delete" class="ember-danger"><i class="fa-solid fa-trash"></i> ${t("Config.Delete")}</button>
@@ -350,7 +361,7 @@ export class EmitterConfig extends EmberApp {
     const natural = presetRadius(getPreset(changes.preset));
     const radius = Number(data.radius);
     const presetChanged = changes.preset !== current.preset;
-    changes.radius = presetChanged || Math.abs(radius - natural) < 0.001 ? null : radius;
+    changes.radius = isZone(current) ? null : presetChanged || Math.abs(radius - natural) < 0.001 ? null : radius;
     // Couches d'un groupe (remises à zéro quand on change d'effet)
     changes.layers = presetChanged ? null : EmitterConfig.#readLayers(form, current.layers);
     await this.manager.update(this.emitterId, changes);
@@ -402,11 +413,13 @@ export class PresetPicker extends EmberApp {
 
   _html() {
     const current = game.settings.get(MODULE_ID, "currentPreset");
+    // Outil Zone : les effets ponctuels sont grisés
+    const zoneTool = activeToolName() === "zone";
     const tiles = (entries) =>
       entries
         .map(
           ([id, p]) => `
-        <button type="button" class="ember-tile ${id === current ? "active" : ""}" data-action="pick" data-preset="${esc(id)}">
+        <button type="button" class="ember-tile ${id === current ? "active" : ""} ${zoneTool && !zoneAllowed(id, getPreset(id)) ? "ember-tile-off" : ""}" data-action="pick" data-preset="${esc(id)}" ${zoneTool && !zoneAllowed(id, getPreset(id)) ? `disabled data-tooltip="${esc(t("Zone.PointOnly"))}"` : ""}>
           <i class="${esc(p.icon)}"></i><span>${esc(presetLabel(id))}</span>
         </button>`
         )
@@ -423,7 +436,8 @@ export class PresetPicker extends EmberApp {
   static async #onPick(event, target) {
     await game.settings.set(MODULE_ID, "currentPreset", target.dataset.preset);
     try {
-      ui.controls.activate?.({ control: "ember", tool: "place" });
+      // On reste sur l'outil Zone s'il était actif, sinon on passe à Poser
+      ui.controls.activate?.({ control: "ember", tool: activeToolName() === "zone" ? "zone" : "place" });
     } catch {
       /* versions sans activate({control, tool}) */
     }

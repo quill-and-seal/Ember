@@ -7,6 +7,7 @@ import { MODULE_ID, LAYER_NAME, FLAG_EMITTERS, log, t } from "./constants.js";
 import { PRESETS, allPresets, getPreset, registerPreset } from "./presets.js";
 import { GROUPS, allGroups, getGroup, registerGroup } from "./groups.js";
 import { EmitterManager } from "./emitter-manager.js";
+import { registerRegionBehavior } from "./region-behavior.js";
 import { createEmberLayerClass } from "./emitter-layer.js";
 import { EmitterConfig, EmitterList, PresetPicker, WeatherConfig, openApps, openEmitterConfig } from "./apps.js";
 import { WEATHER_TYPES, WEATHER_AMBIANCES } from "./weather-presets.js";
@@ -71,6 +72,9 @@ Hooks.once("init", () => {
     }
   });
 
+  // Comportement de Région « Effet Ember » (une Région de Foundry remplie d'un effet)
+  registerRegionBehavior();
+
   CONFIG.Canvas.layers[LAYER_NAME] = {
     layerClass: createEmberLayerClass({
       manager,
@@ -134,32 +138,38 @@ Hooks.on("getSceneControlButtons", (controls) => {
       icon: "fa-solid fa-location-crosshairs",
       order: 1
     },
+    zone: {
+      name: "zone",
+      title: "EMBER.Controls.Zone",
+      icon: "fa-solid fa-draw-polygon",
+      order: 2
+    },
     picker: {
       name: "picker",
       title: "EMBER.Controls.Picker",
       icon: "fa-solid fa-palette",
-      order: 2,
+      order: 3,
       ...button(() => new PresetPicker().render({ force: true }))
     },
     list: {
       name: "list",
       title: "EMBER.Controls.List",
       icon: "fa-solid fa-list",
-      order: 3,
+      order: 4,
       ...button(() => new EmitterList(manager).render({ force: true }))
     },
     weather: {
       name: "weather",
       title: "EMBER.Controls.Weather",
       icon: "fa-solid fa-cloud-sun-rain",
-      order: 4,
+      order: 5,
       ...button(() => new WeatherConfig(manager).render({ force: true }))
     },
     clear: {
       name: "clear",
       title: "EMBER.Controls.Clear",
       icon: "fa-solid fa-trash",
-      order: 5,
+      order: 6,
       ...button(async () => {
         const ok = await foundry.applications.api.DialogV2.confirm({
           window: { title: t("Controls.Clear") },

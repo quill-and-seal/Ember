@@ -9,7 +9,8 @@
       "ClearConfirm": "Supprimer tous les émetteurs de particules de cette scène ?",
       "Wind": "Vent de la scène",
       "Weather": "Météo et vent de la scène",
-      "Select": "Sélectionner et modifier (clic dans la zone d'un effet, glisser pour le déplacer)"
+      "Select": "Sélectionner et modifier (clic dans la zone d'un effet, glisser pour le déplacer)",
+      "Zone": "Dessiner une zone (clic = point, double-clic ou premier point = fermer, clic droit = retirer un point, Échap = annuler)"
     },
     "Preset": {
       "campfire": "Feu",
@@ -214,6 +215,42 @@
         "ashfall": "Pluie de cendres",
         "fog": "Brouillard"
       }
+    },
+    "Zone": {
+      "NotAllowed": "« {effect} » est un effet ponctuel : il ne peut pas remplir une zone. Choisis un autre effet.",
+      "PointOnly": "Effet ponctuel : pas en zone",
+      "ShapeHint": "Zone dessinée : la quantité suit la surface. Avec l'outil Sélectionner, glisse un sommet pour le déplacer, clique sur un bord pour en ajouter un, clic droit sur un sommet pour le retirer.",
+      "NoLight": "Une zone n'a pas de lumière de Foundry (elle est ronde et ne suivrait pas la forme). Pose un émetteur à part si tu veux éclairer.",
+      "Behavior": "Effet Ember"
+    },
+    "RegionBehavior": {
+      "FIELDS": {
+        "preset": {
+          "label": "Effet",
+          "hint": "L'effet qui remplit la Région. Les effets ponctuels (torche, bougie, étincelles) ne sont pas proposés."
+        },
+        "density": {
+          "label": "Densité"
+        },
+        "size": {
+          "label": "Taille"
+        },
+        "speed": {
+          "label": "Vitesse"
+        },
+        "color": {
+          "label": "Couleur",
+          "hint": "Laisser vide pour garder les couleurs de l'effet."
+        },
+        "hidden": {
+          "label": "Caché aux joueurs"
+        }
+      }
+    }
+  },
+  "TYPES": {
+    "RegionBehavior": {
+      "ember-particles.effect": "Effet Ember"
     }
   }
 }

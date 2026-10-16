@@ -19,6 +19,8 @@ import { spawnPuff } from "./engine/puff.js";
 import { LightController } from "./light-controller.js";
 import { TokenTracker, computeWallBounds, sceneDarkness } from "./world.js";
 import { WeatherController } from "./weather-controller.js";
+import { isZone, zonePoints, polygonSpawnArea, zoneReach } from "./zones.js";
+import { regionEmitters } from "./region-behavior.js";
 import { blockedByWalls, presetRadius } from "./adapter.js";
 
 /** Intervalle de relecture de l'obscurité de la scène (ms). */
@@ -186,7 +188,14 @@ export class EmitterManager {
   /** Aligne les générateurs actifs sur les émetteurs de la scène affichée. */
   sync() {
     if (!canvas.ready || !canvas.scene) return;
-    const emitters = this.getEmitters();
+    // Émetteurs posés par Ember, plus ceux des Régions qui ont un comportement « Effet Ember »
+    let fromRegions = {};
+    try {
+      fromRegions = regionEmitters();
+    } catch (err) {
+      warn("Lecture des Régions impossible", err);
+    }
+    const emitters = { ...this.getEmitters(), ...fromRegions };
 
     for (const [id, entry] of this.#active) {
       const emitter = emitters[id];
@@ -214,9 +223,10 @@ export class EmitterManager {
     const entries = [];
     for (const [id, entry] of this.#active) {
       const emitter = emitters[id];
-      // Un groupe n'a qu'une lumière : celle de sa couche principale
+      // Un groupe n'a qu'une lumière : celle de sa couche principale. Une zone n'en a pas
+      // (une lumière de Foundry est ronde, elle ne suivrait pas la forme).
       const lead = entry.parts.find((p) => p.lead);
-      if (!emitter || !lead || typeof lead.generator.getLight !== "function") continue;
+      if (!emitter || !lead || typeof lead.generator.getLight !== "function" || isZone(emitter)) continue;
       // Réglages de lumière à jour (ils ne recréent pas l'effet), effet et couleur de la couche principale
       const lit = { ...emitter, preset: lead.emitter.preset, color: lead.emitter.color, x: emitter.x + lead.dx, y: emitter.y + lead.dy };
       entries.push({ emitter: lit, preset: lead.preset, system: lead.generator });
@@ -237,6 +247,8 @@ export class EmitterManager {
   }
 
   #wallBounds(emitter, preset = getPreset(emitter.preset)) {
+    // Une zone dessinée est sa propre limite (le polygone de mouvement partirait de son seul centre)
+    if (isZone(emitter)) return null;
     if (!blockedByWalls(emitter, preset)) return null;
     return computeWallBounds(emitter.x, emitter.y, emitter.elevation ?? 0);
   }
@@ -252,7 +264,8 @@ export class EmitterManager {
   /** Les régions ont changé : intérieurs de la météo recalculés. */
   refreshRegions() {
     this.weather.refreshRegions();
-    this.#applyWetness();
+    // Une Région avec un comportement « Effet Ember » a peut-être changé de forme ou de réglages
+    this.sync();
   }
 
   /**
@@ -291,7 +304,13 @@ export class EmitterManager {
     const entry = this.#active.get(id);
     if (!entry) return;
     for (const part of entry.parts) {
-      const area = buildArea(part.preset.area, x + part.dx, y + part.dy, canvas.dimensions.size, part.emitter.radius);
+      const area = isZone(part.emitter)
+        ? polygonSpawnArea(zonePoints(part.emitter, x, y))
+        : buildArea(part.preset.area, x + part.dx, y + part.dy, canvas.dimensions.size, part.emitter.radius);
+      if (area.points) {
+        part.generator.spawnArea = area;
+        continue;
+      }
       try {
         const target = part.generator.spawnArea;
         if (target && typeof target === "object") {
@@ -350,7 +369,9 @@ export class EmitterManager {
     let system;
     cfg.bounds = this.#wallBounds(emitter, preset);
     cfg.darkness = sceneDarkness();
-    const reach = (emitter.radius ?? presetRadius(preset)) * canvas.dimensions.size + canvas.dimensions.size * 2;
+    const reach = isZone(emitter)
+      ? zoneReach(emitter) + canvas.dimensions.size * 2
+      : (emitter.radius ?? presetRadius(preset)) * canvas.dimensions.size + canvas.dimensions.size * 2;
     try {
       system = new EmberParticleSystem(cfg, {
         gate,

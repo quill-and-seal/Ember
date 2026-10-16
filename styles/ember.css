@@ -225,3 +225,9 @@
   font-size: 1.2rem;
   color: var(--ember-accent);
 }
+
+/* Zones : effets ponctuels grisés dans le sélecteur */
+.ember-picker .ember-tile.ember-tile-off {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

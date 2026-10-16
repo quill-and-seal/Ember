@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0
+
+- **Zones dessinées** (#3) : un effet peut remplir un polygone de forme libre. Nouvel outil **Zone** : clic = point, double-clic ou premier point = fermer, clic droit = retirer le dernier point, Échap = annuler.
+- Modification : glisser l'intérieur déplace la zone ; quand sa fenêtre est ouverte, glisser un sommet le déplace, clic sur un bord ajoute un sommet, clic droit sur un sommet le retire.
+- **Comportement de Région « Effet Ember »** : une Région de Foundry se remplit de l'effet choisi (effet, densité, taille, vitesse, couleur, caché), et suit la Région quand elle change.
+- Quantité selon la surface (densité par case de l'effet seul, plafonnée) ; dans une zone, l'élan part au hasard et ne tourbillonne pas autour du centre.
+- Groupes autorisés en zone (sans leurs bougies ni étincelles) ; torche, bougie et étincelles refusées (grisées dans le sélecteur avec l'outil Zone).
+- Une zone n'a pas de lumière de Foundry ; le générateur de Foundry utilise le rectangle englobant de la forme.
+
 ## 0.5.2
 
 - Lumières des effets revues pour une carte vue du dessus, maintenant qu'elles ont leur vraie taille : portée réduite (torche 1 case vive / 3,5 cases faibles, feu 1,5 / 4,5, bougie 0,4 / 1,5…), cœur moins éblouissant, bord très doux (atténuation forte) au lieu d'un disque net.

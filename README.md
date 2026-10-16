@@ -36,6 +36,16 @@ Sur un émetteur posé, avec l'outil **Sélectionner** (flèche, l'outil par dé
 - **Glisser** pour le déplacer (maintiens **Maj** pour l'aimanter au centre d'une case).
 - Au survol, un **trait pointillé** dessine la zone de l'effet ; tant que sa fenêtre est ouverte, un **contour plein** montre quel effet on modifie.
 
+### Zones dessinées
+
+Un effet peut remplir une **zone de forme libre** au lieu de partir d'un point : brume sur un marécage, fumée dans une pièce, feuilles sur un bosquet, braises sur un champ brûlé.
+
+- **Outil Zone** (groupe Ember) : clique pour poser chaque point ; double-clic ou clic sur le premier point pour fermer la forme ; clic droit pour retirer le dernier point ; Échap pour annuler. L'effet posé est celui choisi dans le sélecteur.
+- **Modifier une zone** : avec l'outil Sélectionner, glisse l'intérieur pour la déplacer en entier. Quand sa fenêtre est ouverte, ses sommets apparaissent : glisse un sommet pour le déplacer, clique sur un bord pour en ajouter un, clic droit sur un sommet pour le retirer.
+- **Avec les Régions de Foundry** : ajoute à une Région le comportement **Effet Ember** et choisis l'effet, sa densité, sa taille, sa vitesse et sa couleur. La Région se remplit de l'effet et le suit si on la déplace ou la redessine (son plus grand polygone est utilisé).
+- La quantité de particules suit la surface (même densité par case que l'effet seul, plafonnée). Les effets et les groupes sont autorisés, sauf les effets ponctuels : **torche, bougie et étincelles** (grisés avec l'outil Zone ; un groupe en zone perd ses bougies et étincelles).
+- Une zone n'a pas de lumière de Foundry (une lumière est ronde et ne suivrait pas la forme) : pose un émetteur à part pour éclairer.
+
 Avec l'outil **Poser**, un clic sur la pastille centrale d'un émetteur l'ouvre aussi (et un glisser le déplace) au lieu d'en poser un nouveau. Le **clic droit** sur un effet ouvre ses réglages quel que soit l'outil.
 
 L'outil **Météo et vent de la scène** règle un vent qui pousse tous les effets de la scène : direction (rose des vents), force et rafales. Le vent agit de deux façons :

@@ -9,7 +9,8 @@
       "ClearConfirm": "Delete every particle emitter on this scene?",
       "Wind": "Scene wind",
       "Weather": "Scene weather and wind",
-      "Select": "Select and edit (click inside an effect's area, drag to move it)"
+      "Select": "Select and edit (click inside an effect's area, drag to move it)",
+      "Zone": "Draw a zone (click = point, double-click or first point = close, right-click = remove a point, Esc = cancel)"
     },
     "Preset": {
       "campfire": "Fire",
@@ -214,6 +215,42 @@
         "ashfall": "Ashfall",
         "fog": "Fog"
       }
+    },
+    "Zone": {
+      "NotAllowed": "\"{effect}\" is a point effect: it can't fill a zone. Pick another effect.",
+      "PointOnly": "Point effect: not for zones",
+      "ShapeHint": "Drawn zone: the amount follows the area. With the Select tool, drag a vertex to move it, click an edge to add one, right-click a vertex to remove it.",
+      "NoLight": "A zone has no Foundry light (lights are round and wouldn't follow the shape). Place a separate emitter if you want light.",
+      "Behavior": "Ember effect"
+    },
+    "RegionBehavior": {
+      "FIELDS": {
+        "preset": {
+          "label": "Effect",
+          "hint": "The effect that fills the Region. Point effects (torch, candle, sparks) aren't offered."
+        },
+        "density": {
+          "label": "Density"
+        },
+        "size": {
+          "label": "Size"
+        },
+        "speed": {
+          "label": "Speed"
+        },
+        "color": {
+          "label": "Color",
+          "hint": "Leave empty to keep the effect's colors."
+        },
+        "hidden": {
+          "label": "Hidden from players"
+        }
+      }
+    }
+  },
+  "TYPES": {
+    "RegionBehavior": {
+      "ember-particles.effect": "Ember effect"
     }
   }
 }
