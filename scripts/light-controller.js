@@ -16,6 +16,15 @@
 
 import { MODULE_ID, warn } from "./constants.js";
 import { lightConfig, modulateLight } from "./adapter.js";
+import { sceneDarkness } from "./world.js";
+
+/**
+ * En plein jour, une flamme éclaire peu : l'intensité de la lumière suit l'obscurité de la scène
+ * (35 % de jour, 100 % de nuit). La portée (et donc la vision) ne change pas.
+ */
+export function daylightFactor(darkness) {
+  return 0.35 + 0.65 * Math.min(1, Math.max(0, darkness));
+}
 
 /** Intervalle entre deux mises à jour de lumière (ms). */
 const TICK_MS = 120;
@@ -121,6 +130,7 @@ export class LightController {
     // une case = canvas.dimensions.size px ; une unité (pied, mètre) = size / distance px.
     const cellPx = canvas.dimensions?.size ?? 100;
     const unitPx = cellPx / (canvas.dimensions?.distance || 5);
+    const day = daylightFactor(sceneDarkness());
 
     for (const { emitter, preset, system } of this.#entries) {
       const base = lightConfig(emitter, preset);
@@ -136,7 +146,9 @@ export class LightController {
           dim: m.dim * cellPx,
           bright: m.bright * cellPx,
           color: m.color,
-          alpha: m.alpha,
+          alpha: m.alpha * day,
+          // Bord très doux : la lumière s'estompe progressivement au lieu de former un disque
+          attenuation: 0.85,
           animation: this.#animation(m.animation),
           walls: true,
           vision: false,

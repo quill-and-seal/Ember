@@ -185,7 +185,7 @@ export function modulateLight(base, { level = 1, radius = 1, flicker = 0 } = {},
   return {
     dim: (src.dim ?? 0) * k,
     bright: (src.bright ?? 0) * k,
-    alpha: Math.min(1, (src.alpha ?? 0.5) * Math.min(1.6, level)),
+    alpha: Math.min(1, (src.alpha ?? 0.5) * Math.min(1.3, level)),
     color: base.color ?? src.color ?? null,
     animation: linkedBase ? null : animation,
     disabled

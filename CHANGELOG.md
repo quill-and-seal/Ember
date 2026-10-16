@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2
+
+- Lumières des effets revues pour une carte vue du dessus, maintenant qu'elles ont leur vraie taille : portée réduite (torche 1 case vive / 3,5 cases faibles, feu 1,5 / 4,5, bougie 0,4 / 1,5…), cœur moins éblouissant, bord très doux (atténuation forte) au lieu d'un disque net.
+- En plein jour, une flamme éclaire peu : l'intensité suit l'obscurité de la scène (35 % de jour, 100 % de nuit), sans changer la portée.
+- Une flamme attisée par le vent éclaire au plus 1,3× plus fort (1,6× avant).
+
 ## 0.5.1
 
 - **Correction de la « grosse orbe »** : la lumière d'Ember (torche, feu, bougie…) recevait son rayon en pieds alors que Foundry l'attend en pixels. Une torche qui devait éclairer 8 cases n'éclairait qu'une quarantaine de pixels, d'où un petit disque saturé. Elle éclaire maintenant toute sa portée, avec le halo de l'aperçu. Même correction pour les lumières liées (qui rétrécissaient) et pour l'éclair de la météo.
