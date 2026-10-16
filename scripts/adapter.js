@@ -247,6 +247,10 @@ export function buildConfig(emitter, preset, { gridPx = REFERENCE_GRID, performa
     // Flamme fragile, sauf si le MJ a désactivé l'extinction sur cet émetteur
     blowout: preset.blowout && emitter.blowout !== false ? { ...preset.blowout } : null,
     glow: buildGlow(emitter, preset, gridPx, glow),
+    // Réactions au monde (la zone des murs est fournie par le gestionnaire)
+    disturb: emitter.tokens !== false && preset.disturb ? scaleDisturb(preset.disturb, g, speed) : null,
+    darknessEffects: emitter.darkness !== false ? preset.darkness ?? null : null,
+    darkness: 0,
     drag: (preset.drag ?? 0) * speed,
     height: scaleRange(preset.height ?? [0, 0], g),
     lift: scaleRange(preset.lift ?? [0, 0], g * speed),
@@ -275,9 +279,24 @@ function buildGlow(emitter, preset, gridPx, force) {
   return { radius: Math.max(0.5, cells) * gridPx * light.scale, color: light.color, alpha: Math.min(0.6, light.alpha + 0.1), _texture: "light" };
 }
 
+/** Mise à l'échelle des effets des tokens (forces en px/s² et px/s). */
+function scaleDisturb(d, g, speed) {
+  return {
+    push: (d.push ?? 0) * g * speed,
+    wake: d.wake ?? 0,
+    lift: (d.lift ?? 0) * g * speed,
+    radius: d.radius ?? 1
+  };
+}
+
+/** L'effet doit-il être arrêté par les murs ? */
+export function blockedByWalls(emitter, preset) {
+  return preset?.walls !== false && emitter.walls !== false;
+}
+
 /** Clés comprises uniquement par le moteur maison. */
 const EMBER_ONLY_KEYS = [
-  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "glow", "drag", "height", "lift", "fall",
+  "radial", "swirl", "wind", "gust", "airflow", "windEffects", "blowout", "glow", "disturb", "darknessEffects", "darkness", "bounds", "drag", "height", "lift", "fall",
   "groundFade", "perspective", "gravity", "prewarm", "gridScale"
 ];
 

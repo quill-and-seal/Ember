@@ -4,8 +4,8 @@ Effets de particules pour **Foundry VTT v14** : feux de camp, torches, fumée, b
 
 Ember a deux moteurs de rendu, au choix du MJ dans les réglages du module (« Moteur de rendu ») :
 
-- **Ember (maison, par défaut)** : le moteur du module, pensé pour une carte vue du dessus. Chaque particule a une hauteur simulée : ce qui monte grossit en se rapprochant de la caméra, ce qui retombe rapetisse jusqu'au sol. Dans le plan, les effets rayonnent depuis leur source, tourbillonnent ou suivent le vent. Il démarre préchauffé (un feu est déjà « pris » quand la scène s'ouvre) et ne dépend que des bases de PIXI.
-- **Foundry (expérimental)** : le générateur intégré à Foundry v14 (`foundry.canvas.animation.ParticleGenerator`). Il n'a pas de hauteur : la montée, la retombée et le tourbillon sont perdus, l'élan et le vent sont approximés.
+- **Ember (recommandé, par défaut)** : le moteur du module, pensé pour une carte vue du dessus. Chaque particule a une hauteur simulée : ce qui monte grossit en se rapprochant de la caméra, ce qui retombe rapetisse jusqu'au sol. Dans le plan, les effets rayonnent depuis leur source, tourbillonnent ou suivent le vent. Il démarre préchauffé (un feu est déjà « pris » quand la scène s'ouvre) et ne dépend que des bases de PIXI.
+- **Foundry (expérimental)** : le générateur intégré à Foundry v14 (`foundry.canvas.animation.ParticleGenerator`). Il n'a pas de hauteur : la montée, la retombée et le tourbillon sont perdus, l'élan et le vent sont approximés, et l'extinction, la lumière adaptative et les réactions au monde ne fonctionnent pas. Le choisir dans les réglages ouvre un avertissement qui liste ce qui est perdu.
 
 Les deux lisent les mêmes presets. Aucune image à télécharger : les textures sont générées à la volée.
 
@@ -15,18 +15,13 @@ Un module de l'atelier [Quill & Seal](https://github.com/quill-and-seal).
 
 ## Installation
 
-Dans Foundry, **Modules complémentaires → Installer un module**, puis colle l'un de ces liens de manifeste :
+Dans Foundry, **Modules complémentaires → Installer un module**, puis colle ce lien de manifeste :
 
-- **Version stable** (générateur de Foundry) :
-  ```
-  https://github.com/quill-and-seal/Ember/releases/latest/download/module.json
-  ```
-- **Variante moteur maison** (vue du dessus, vent, lumière adaptative) :
-  ```
-  https://github.com/quill-and-seal/Ember/releases/download/va0.1.0/module.json
-  ```
+```
+https://github.com/quill-and-seal/Ember/releases/latest/download/module.json
+```
 
-Les deux ont le même identifiant (`ember-particles`) : installer l'une remplace l'autre, et les émetteurs déjà posés restent valables.
+Depuis la 0.2.0, la version stable utilise le moteur Ember. La pré-version va0.1.0 reste disponible mais n'est plus mise à jour.
 
 ## Utilisation
 
@@ -57,6 +52,14 @@ Les effets qui éclairent (feu de camp, torche, bougie, braises, aura arcanique,
 - **Portée** : multiplie le rayon de la lumière.
 
 Rien n'est écrit en base de données : chaque joueur calcule la lumière de son côté, en phase grâce à l'heure du serveur, et une lumière liée garde son document intact.
+
+### Réactions au monde (moteur Ember)
+
+Les effets réagissent à la scène, sans rien écrire en base de données. Chaque réaction se décoche dans la section **Réactions au monde** des réglages d'un émetteur.
+
+- **Les murs arrêtent les particules** : la fumée reste dans la pièce et s'accumule contre les murs, et ne sort que par les portes ouvertes. Ouvrir ou fermer une porte met à jour la zone tout de suite. Les effets magiques (aura arcanique, lumière sacrée) traversent les murs.
+- **Les tokens dérangent les effets** : un token qui traverse une fumée ou une brume l'écarte et y laisse un sillage, il soulève les feuilles et la poussière, et les lucioles le fuient. Seuls les tokens que le joueur voit comptent : un token invisible ne se trahit pas par les particules.
+- **L'obscurité de la scène compte** : les lucioles n'apparaissent que dans le noir, les flammes, braises et magies ressortent la nuit, la fumée et la poussière s'y voient moins. Les transitions de jour à nuit sont suivies en direct.
 
 L'outil **Émetteurs de la scène** liste tous les émetteurs : centrer la vue, activer/désactiver, régler, supprimer.
 
@@ -102,6 +105,7 @@ ember.registerPreset("frost", {
 ## Feuille de route
 
 - [x] Émetteurs posés sur la scène, presets, synchronisation
+- [x] Moteur Ember vue du dessus, vent, extinction, lumière adaptative, réactions au monde
 - [ ] Effets attachés aux tokens (auras qui suivent le token)
 - [ ] Effets ponctuels déclenchés (explosions, impacts, projectiles)
 - [ ] Météo plein écran (pluie, neige, cendres)

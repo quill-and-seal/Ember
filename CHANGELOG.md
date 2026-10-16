@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0
+
+Le moteur Ember devient le moteur par défaut de la version stable (tout ce qui était dans la pré-version va0.1.0), avec en plus les réactions au monde :
+
+- **Les murs arrêtent les particules** (#6) : zone de mouvement de Foundry calculée depuis l'émetteur, mise à jour quand un mur change ou qu'une porte s'ouvre ; les particules ne naissent jamais de l'autre côté d'un mur ; la magie traverse.
+- **Les tokens dérangent les effets** (#7) : répulsion, sillage et envol (feuilles et poussière soulevées, lucioles qui fuient), seulement pour les tokens que le joueur voit.
+- **Réaction à l'obscurité** (#8) : lucioles seulement dans le noir, flammes et magie plus visibles la nuit, fumée et poussière moins visibles ; suivi en direct des transitions.
+- Options par émetteur « Arrêté par les murs », « Dérangé par les tokens », « Réagit à l'obscurité ».
+- Choisir le générateur de Foundry dans les réglages ouvre un avertissement listant ce qui est perdu ; un rappel s'affiche au MJ au chargement tant qu'il est actif.
+- Aperçu : curseur d'obscurité, pièce fermée avec porte, token qui passe.
+
 ## va0.1.0 — variante « moteur maison » (pré-version)
 
 Même base que la 0.1.0, avec le moteur de particules du module :

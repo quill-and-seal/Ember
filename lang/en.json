@@ -61,8 +61,8 @@
     "Settings": {
       "Engine": {
         "Name": "Rendering engine",
-        "Hint": "Ember engine: the module's own engine, with gravity. Foundry: the particle generator built into Foundry v14 (experimental). Applies to every player.",
-        "Ember": "Ember (built-in to the module)",
+        "Hint": "Ember (recommended): the module's own engine, with height, wind, blow-out, adaptive light and world reactions. Foundry: the generator built into Foundry v14, experimental and limited. Applies to every player.",
+        "Ember": "Ember (recommended)",
         "Core": "Foundry (core, experimental)"
       },
       "Performance": {
@@ -123,6 +123,34 @@
       "Scale": "Range",
       "Follows": "The light follows the flame: off when blown out, stronger when the wind stokes it, dipping when it flickers.",
       "EmberOnly": "Adaptive light only works with the Ember engine (module settings)."
+    },
+    "Engine": {
+      "ActiveWarning": "Ember is using Foundry's particle generator: height, live wind, flame blow-out, adaptive light and world reactions are disabled. Switch back to the Ember engine in the module settings.",
+      "Note": "Foundry's generator is experimental and only supports part of Ember's effects.",
+      "WarnTitle": "Switch to Foundry's generator?",
+      "WarnIntro": "The particle generator built into Foundry v14 is experimental. With it, emitters lose:",
+      "Lose": {
+        "Height": "height and perspective (rising, falling, top-down view)",
+        "Wind": "live wind, gusts and wind reactions (frozen at creation only)",
+        "Blowout": "flame flicker, blow-out and relighting",
+        "Light": "adaptive light",
+        "World": "world reactions: walls, tokens and darkness"
+      },
+      "WarnOutro": "This applies to every player. You can switch back to the Ember engine at any time.",
+      "WarnYes": "Use Foundry's generator",
+      "WarnNo": "Keep the Ember engine"
+    },
+    "World": {
+      "Title": "World reactions",
+      "Walls": "Blocked by walls",
+      "WallsHint": "Particles stay in the room and only leave through open doors.",
+      "WallsMagic": "This effect is magical: it passes through walls.",
+      "Tokens": "Disturbed by tokens",
+      "TokensHint": "Visible tokens passing by push particles away and leave a wake.",
+      "Darkness": "Reacts to darkness",
+      "DarknessHint": "The effect changes with the scene's darkness.",
+      "DarknessNight": "Only appears in darkness: invisible on a daylight scene. Uncheck to show it at any time.",
+      "EmberOnly": "World reactions only work with the Ember engine."
     }
   }
 }

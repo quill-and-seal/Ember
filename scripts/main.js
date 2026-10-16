@@ -170,6 +170,17 @@ Hooks.on("canvasTearDown", () => manager.clear());
 // Foundry réinitialise ses lumières (mur modifié, lumière ajoutée…) : on remet les nôtres.
 Hooks.on("initializeLightSources", () => manager.lights.onInitializeLightSources());
 
+// Murs posés, déplacés, supprimés, portes ouvertes ou fermées : la fumée suit
+// (petit délai : Foundry met d'abord à jour ses arêtes de collision)
+let wallsTimer = null;
+for (const hook of ["createWall", "updateWall", "deleteWall"]) {
+  Hooks.on(hook, (wall) => {
+    if (wall.parent?.id !== canvas.scene?.id) return;
+    clearTimeout(wallsTimer);
+    wallsTimer = setTimeout(() => manager.refreshWalls(), 50);
+  });
+}
+
 Hooks.on("updateScene", (scene, changes) => {
   if (scene.id !== canvas.scene?.id) return;
   const flagChanged = foundry.utils.hasProperty(changes, `flags.${MODULE_ID}`) || foundry.utils.hasProperty(changes, `flags.-=${MODULE_ID}`);
@@ -181,4 +192,51 @@ Hooks.on("updateScene", (scene, changes) => {
 
 Hooks.once("ready", () => {
   log(`Prêt — ${Object.keys(allPresets()).length} presets, flag « ${FLAG_EMITTERS} ».`);
+  if (game.user.isGM && game.settings.get(MODULE_ID, "engine") === "core") {
+    ui.notifications.warn(t("Engine.ActiveWarning"));
+  }
+});
+
+/* -------------------------------------------- */
+/*  Avertissement au passage au générateur      */
+/* -------------------------------------------- */
+
+/** Ce que perd un émetteur avec le générateur de Foundry (affiché dans l'avertissement). */
+const CORE_LOSSES = ["Height", "Wind", "Blowout", "Light", "World"];
+
+/**
+ * Dans les réglages du module, choisir « Foundry » ouvre un avertissement.
+ * Si le MJ annule, la liste revient sur le moteur Ember avant l'enregistrement.
+ */
+Hooks.on("renderSettingsConfig", (app, html) => {
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  const select = root?.querySelector(`select[name="${MODULE_ID}.engine"]`);
+  if (!select || select.dataset.emberWarn) return;
+  select.dataset.emberWarn = "1";
+
+  const note = document.createElement("p");
+  note.className = "notes ember-engine-note";
+  note.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${t("Engine.Note")}`;
+  const group = select.closest(".form-group");
+  group?.append(note);
+  const showNote = () => (note.hidden = select.value !== "core");
+  showNote();
+
+  let previous = select.value;
+  select.addEventListener("change", async () => {
+    if (select.value !== "core") {
+      previous = select.value;
+      return showNote();
+    }
+    const items = CORE_LOSSES.map((k) => `<li>${t(`Engine.Lose.${k}`)}</li>`).join("");
+    const ok = await foundry.applications.api.DialogV2.confirm({
+      window: { title: t("Engine.WarnTitle"), icon: "fa-solid fa-triangle-exclamation" },
+      content: `<p>${t("Engine.WarnIntro")}</p><ul>${items}</ul><p>${t("Engine.WarnOutro")}</p>`,
+      yes: { label: t("Engine.WarnYes") },
+      no: { label: t("Engine.WarnNo"), default: true }
+    });
+    if (!ok) select.value = previous;
+    else previous = "core";
+    showNote();
+  });
 });

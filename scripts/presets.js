@@ -40,6 +40,16 @@
  *               quand la flamme est soufflée, plus forte quand le vent l'attise.
  *   drag        Frottement par seconde (0 = aucun)
  *
+ *   Réactions au monde (moteur maison uniquement) :
+ *   walls       false pour traverser les murs (magie). Par défaut, les murs arrêtent les particules
+ *               et la fumée ne sort que par les portes ouvertes.
+ *   disturb     Comment les tokens qui passent dérangent l'effet : { push, wake, lift, radius }.
+ *               push : répulsion en px/s² au contact ; wake : part de la vitesse du token transmise
+ *               (sillage) ; lift : envol en px/s quand un token passe ; radius : portée en multiple
+ *               de la taille du token (1 par défaut).
+ *   darkness    Réaction à l'obscurité de la scène : { rate, count, scale, life, alpha },
+ *               chaque valeur étant [plein jour, nuit noire].
+ *
  *   En hauteur (moteur maison uniquement) :
  *   height      Hauteur de départ [min, max] en px
  *   lift        Vitesse verticale de départ [min, max] en px/s (négatif = descend)
@@ -50,6 +60,8 @@
 export const PRESETS = {
   campfire: {
     icon: "fa-solid fa-fire",
+    disturb: { wake: 0.2 },
+    darkness: { alpha: [0.85, 1.15] },
     light: { bright: 4, dim: 8, color: "#ff9a3c", alpha: 0.5, animation: { type: "torch", speed: 3, intensity: 4 } },
     windFactor: 0.35,
     windEffects: { rate: 1.8, count: 1.7, scale: 1.35, alpha: 1.15, lift: 1.4 },
@@ -71,6 +83,8 @@ export const PRESETS = {
 
   torch: {
     icon: "fa-solid fa-fire-flame-simple",
+    disturb: { wake: 0.2 },
+    darkness: { alpha: [0.85, 1.15] },
     light: { bright: 4, dim: 8, color: "#ffb347", alpha: 0.45, animation: { type: "torch", speed: 4, intensity: 3 } },
     windFactor: 0.3,
     windEffects: { rate: 1.4, count: 1.3, scale: 1.2, life: 0.85 },
@@ -93,6 +107,8 @@ export const PRESETS = {
 
   candle: {
     icon: "fa-solid fa-candle-holder",
+    disturb: { wake: 0.25 },
+    darkness: { alpha: [0.85, 1.2] },
     light: { bright: 1, dim: 2, color: "#ffcf80", alpha: 0.4, animation: { type: "flame", speed: 2, intensity: 2 } },
     windFactor: 0.25,
     windEffects: { scale: 0.9, life: 0.9 },
@@ -115,6 +131,8 @@ export const PRESETS = {
 
   smoke: {
     icon: "fa-solid fa-smog",
+    disturb: { push: 140, wake: 0.6, radius: 1.3 },
+    darkness: { alpha: [1, 0.7] },
     windFactor: 1,
     windEffects: { life: 0.55, alpha: 0.7, scale: 1.2 },
     textures: ["smoke"],
@@ -136,6 +154,8 @@ export const PRESETS = {
 
   embers: {
     icon: "fa-solid fa-fire-flame-curved",
+    disturb: { push: 70, wake: 0.4 },
+    darkness: { alpha: [0.75, 1.25] },
     light: { bright: 0, dim: 1.5, color: "#ff6a1a", alpha: 0.25 },
     windFactor: 0.8,
     windEffects: { rate: 2.5, count: 2.2, lift: 1.3 },
@@ -159,6 +179,7 @@ export const PRESETS = {
 
   sparks: {
     icon: "fa-solid fa-bolt",
+    darkness: { alpha: [0.9, 1.15] },
     windFactor: 0.2,
     windEffects: { rate: 1.3, life: 0.9 },
     textures: ["spark"],
@@ -182,6 +203,8 @@ export const PRESETS = {
 
   fireflies: {
     icon: "fa-solid fa-bug",
+    disturb: { push: 180, radius: 2.5 },
+    darkness: { rate: [0, 1], count: [0, 1] },
     windFactor: 0.3,
     windEffects: { rate: 0.35, count: 0.5, alpha: 0.6 },
     textures: ["glow"],
@@ -202,6 +225,8 @@ export const PRESETS = {
 
   arcane: {
     icon: "fa-solid fa-wand-sparkles",
+    walls: false,
+    darkness: { alpha: [0.85, 1.15] },
     light: { bright: 1, dim: 3, color: "#9b6bff", alpha: 0.45, animation: { type: "pulse", speed: 2, intensity: 3 } },
     windFactor: 0,
     textures: ["star", "glow"],
@@ -222,6 +247,9 @@ export const PRESETS = {
 
   holy: {
     icon: "fa-solid fa-sun",
+    walls: false,
+    disturb: { push: 30, wake: 0.2 },
+    darkness: { alpha: [0.85, 1.15] },
     light: { bright: 2, dim: 4, color: "#ffd76a", alpha: 0.45 },
     windFactor: 0.15,
     textures: ["glow", "star"],
@@ -242,6 +270,8 @@ export const PRESETS = {
 
   poison: {
     icon: "fa-solid fa-skull-crossbones",
+    disturb: { push: 120, wake: 0.6, radius: 1.3 },
+    darkness: { alpha: [1, 0.85] },
     windFactor: 0.9,
     windEffects: { life: 0.5, alpha: 0.7, scale: 1.3 },
     textures: ["smoke"],
@@ -263,6 +293,7 @@ export const PRESETS = {
 
   bubbles: {
     icon: "fa-solid fa-circle-dot",
+    disturb: { push: 90 },
     windFactor: 0.6,
     windEffects: { life: 0.5 },
     textures: ["bubble"],
@@ -282,6 +313,7 @@ export const PRESETS = {
 
   leaves: {
     icon: "fa-solid fa-leaf",
+    disturb: { push: 60, wake: 0.5, lift: 140, radius: 1.2 },
     windFactor: 1.3,
     windEffects: { rate: 3, count: 2.5 },
     textures: ["leaf"],
@@ -304,6 +336,8 @@ export const PRESETS = {
 
   dust: {
     icon: "fa-solid fa-wind",
+    disturb: { push: 80, wake: 0.8, lift: 50, radius: 1.3 },
+    darkness: { alpha: [1, 0.6] },
     windFactor: 1,
     windEffects: { rate: 2.5, count: 2.5, alpha: 1.3 },
     textures: ["dust"],

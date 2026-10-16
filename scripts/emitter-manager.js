@@ -16,6 +16,11 @@ import { EmberParticleSystem } from "./engine/particle-system.js";
 import { createSceneContainer, canvasTicker } from "./engine/placement.js";
 import { spawnPuff } from "./engine/puff.js";
 import { LightController } from "./light-controller.js";
+import { TokenTracker, computeWallBounds, sceneDarkness } from "./world.js";
+import { blockedByWalls, presetRadius } from "./adapter.js";
+
+/** Intervalle de relecture de l'obscurité de la scène (ms). */
+const DARKNESS_POLL_MS = 250;
 
 export class EmitterManager {
   /** @type {Map<string, {generator: object, signature: string}>} */
@@ -25,6 +30,12 @@ export class EmitterManager {
 
   /** Lumières liées aux émetteurs (moteur maison uniquement). */
   lights = new LightController();
+
+  /** Tokens visibles, partagés par tous les émetteurs (réactions au monde). */
+  tokens = new TokenTracker();
+
+  #darkness = 0;
+  #darknessTimer = null;
 
   /* -------------------------------------------- */
   /*  Lecture                                     */
@@ -172,6 +183,7 @@ export class EmitterManager {
     }
 
     this.#applyWind(emitters);
+    this.#startDarknessWatch();
     this.lights.sync(this.#lightEntries(emitters));
     canvas[LAYER_NAME]?.refreshHandles?.();
   }
@@ -187,8 +199,47 @@ export class EmitterManager {
     return entries;
   }
 
+  /* -------------------------------------------- */
+  /*  Réactions au monde                          */
+  /* -------------------------------------------- */
+
+  /** Les murs ont changé (mur posé, porte ouverte…) : on recalcule la zone de chaque effet. */
+  refreshWalls() {
+    const emitters = this.getEmitters();
+    for (const [id, entry] of this.#active) {
+      const emitter = emitters[id];
+      if (!emitter || typeof entry.generator.setBounds !== "function") continue;
+      entry.generator.setBounds(this.#wallBounds(emitter));
+    }
+  }
+
+  #wallBounds(emitter) {
+    if (!blockedByWalls(emitter, getPreset(emitter.preset))) return null;
+    return computeWallBounds(emitter.x, emitter.y, emitter.elevation ?? 0);
+  }
+
+  /** Relit l'obscurité de la scène régulièrement (elle peut s'animer de jour à nuit). */
+  #startDarknessWatch() {
+    if (this.#darknessTimer) return;
+    const tick = () => {
+      const dk = sceneDarkness();
+      if (Math.abs(dk - this.#darkness) < 0.005) return;
+      this.#darkness = dk;
+      for (const entry of this.#active.values()) entry.generator.setDarkness?.(dk);
+    };
+    this.#darkness = sceneDarkness();
+    this.#darknessTimer = setInterval(tick, DARKNESS_POLL_MS);
+  }
+
+  #stopDarknessWatch() {
+    clearInterval(this.#darknessTimer);
+    this.#darknessTimer = null;
+  }
+
   /** Arrête tous les générateurs et leurs lumières (changement de scène, désactivation). */
   clear() {
+    this.#stopDarknessWatch();
+    this.tokens.clear();
     this.lights.clear();
     for (const id of [...this.#active.keys()]) this.#destroy(id);
   }
@@ -236,8 +287,12 @@ export class EmitterManager {
   /** Moteur maison. */
   #spawnEmber(emitter, cfg) {
     let system;
+    cfg.bounds = this.#wallBounds(emitter);
+    cfg.darkness = sceneDarkness();
+    const reach = (emitter.radius ?? presetRadius(getPreset(emitter.preset))) * canvas.dimensions.size + canvas.dimensions.size * 2;
     try {
       system = new EmberParticleSystem(cfg, {
+        getDisturbers: cfg.disturb ? () => this.tokens.near(emitter.x, emitter.y, reach) : null,
         container: createSceneContainer(cfg.elevation),
         ticker: canvasTicker(),
         // Heure du serveur : les rafales (et donc les extinctions) tombent au même moment pour tous

@@ -159,9 +159,30 @@ export class EmitterConfig extends EmberApp {
         </div>
       </fieldset>
       ${this._lightHtml(e, preset)}
+      ${this._worldHtml(e, preset)}
       <footer class="ember-footer">
         <button type="button" data-action="delete" class="ember-danger"><i class="fa-solid fa-trash"></i> ${t("Config.Delete")}</button>
       </footer>`;
+  }
+
+  /** Section « Réactions au monde » : murs, tokens, obscurité. */
+  _worldHtml(e, preset) {
+    const box = (name, label, hint) => `
+        <div class="form-group">
+          <label>${label}</label>
+          <div class="form-fields"><input type="checkbox" name="${name}" ${e[name] !== false ? "checked" : ""}></div>
+          ${hint ? `<p class="hint">${hint}</p>` : ""}
+        </div>`;
+    const rows = [];
+    if (preset?.walls === false) rows.push(`<p class="hint"><i class="fa-solid fa-wand-sparkles"></i> ${t("World.WallsMagic")}</p>`);
+    else rows.push(box("walls", t("World.Walls"), t("World.WallsHint")));
+    if (preset?.disturb) rows.push(box("tokens", t("World.Tokens"), t(`World.TokensHint`)));
+    if (preset?.darkness) {
+      const night = Array.isArray(preset.darkness.rate) && preset.darkness.rate[0] === 0;
+      rows.push(box("darkness", t("World.Darkness"), night ? t("World.DarknessNight") : t("World.DarknessHint")));
+    }
+    const core = game.settings.get(MODULE_ID, "engine") === "core" ? `<p class="hint">${t("World.EmberOnly")}</p>` : "";
+    return `<fieldset><legend>${t("World.Title")}</legend>${rows.join("")}${core}</fieldset>`;
   }
 
   /** Section « Lumière » : lumière créée par Ember, lumière existante liée, ou aucune. */
@@ -267,6 +288,9 @@ export class EmitterConfig extends EmberApp {
       lightLink: data.light === "linked" ? data.lightLink || current.lightLink || null : current.lightLink,
       lightScale: data.lightScale === undefined ? current.lightScale : Number(data.lightScale),
       lightVision: data.lightVision === undefined ? current.lightVision : !!data.lightVision,
+      walls: form.querySelector("input[name=walls]") ? !!data.walls : current.walls,
+      tokens: form.querySelector("input[name=tokens]") ? !!data.tokens : current.tokens,
+      darkness: form.querySelector("input[name=darkness]") ? !!data.darkness : current.darkness,
       color: colorInput?.hasAttribute("data-unset") ? null : data.color
     };
     // Le rayon n'est mémorisé que s'il diffère de celui du preset.

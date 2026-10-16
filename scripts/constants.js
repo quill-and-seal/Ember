@@ -50,7 +50,11 @@ export const EMITTER_DEFAULTS = Object.freeze({
   lightLink: null,
   lightScale: 1,
   // true : vraie lumière Foundry (compte pour la vision) ; false : simple lueur visuelle
-  lightVision: true
+  lightVision: true,
+  // Réactions au monde (moteur maison)
+  walls: true,
+  tokens: true,
+  darkness: true
 });
 
 /** Log préfixé. */

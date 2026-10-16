@@ -21,6 +21,16 @@
  *               approche du seuil, s'éteint au-delà (callback onExtinguish, pour une bouffée de
  *               fumée) et se rallume après relightDelay ms de calme relatif (onRelight).
  *
+ * Réactions au monde :
+ *   - bounds    zone autorisée { contains(x, y) } (murs) : une particule qui la quitte est
+ *               arrêtée au mur et rebondit un peu ; les apparitions hors zone sont retirées.
+ *   - disturb   comment les tokens dérangent l'effet { push, wake, lift, radius } :
+ *               push  répulsion (px/s²) au contact, wake  part de la vitesse du token transmise
+ *               (sillage), lift  envol vertical (px/s) quand un token passe, radius  portée en
+ *               multiple de la taille du token. Les tokens viennent de getDisturbers().
+ *   - darkness  obscurité de la scène (0 = plein jour, 1 = nuit noire), modifiable avec setDarkness()
+ *   - darknessEffects  { rate, count, scale, life, alpha } : [valeur de jour, valeur de nuit]
+ *
  * Lumière : le moteur calcule à chaque image un niveau de lumière (getLight()) qui suit la
  * flamme : 0 quand elle est soufflée, plus fort quand le vent l'attise, en creux quand elle
  * vacille. Les lumières de Foundry s'en servent. Avec l'option
@@ -67,13 +77,15 @@ export class EmberParticleSystem {
    *                                              serveur : tous les joueurs voient les mêmes coups de vent.
    * @param {(pos: {x, y}) => void} [options.onExtinguish]  Appelé quand le vent éteint la flamme
    * @param {(pos: {x, y}) => void} [options.onRelight]     Appelé quand elle se rallume
+   * @param {() => Array<{x, y, r, vx, vy}>} [options.getDisturbers]  Tokens proches, appelé à chaque image
    */
-  constructor(config, { container, ticker, random = Math.random, clock, onExtinguish, onRelight } = {}) {
+  constructor(config, { container, ticker, random = Math.random, clock, onExtinguish, onRelight, getDisturbers } = {}) {
     this.config = config;
     this.random = random;
     this.clock = clock ?? (() => globalThis.performance?.now?.() ?? Date.now());
     this.onExtinguish = onExtinguish ?? null;
     this.onRelight = onRelight ?? null;
+    this.getDisturbers = getDisturbers ?? null;
 
     /** La flamme est-elle allumée ? (seuls les effets « blowout » peuvent s'éteindre) */
     this.lit = true;
@@ -111,6 +123,31 @@ export class EmberParticleSystem {
     this.config.wind = { x: wind?.x ?? 0, y: wind?.y ?? 0 };
     this.config.gust = gust;
     this.config.airflow = airflow;
+  }
+
+  /** Change la zone autorisée (murs) en direct. null = aucune limite. */
+  setBounds(bounds) {
+    this.config.bounds = bounds ?? null;
+  }
+
+  /** Change l'obscurité de la scène en direct (0 = jour, 1 = nuit). */
+  setDarkness(level) {
+    this.config.darkness = Math.min(1, Math.max(0, Number(level) || 0));
+  }
+
+  /**
+   * Multiplicateurs de comportement dus à l'obscurité : interpolation entre la valeur
+   * de jour et la valeur de nuit de chaque réaction. Peut descendre à 0 (lucioles le jour).
+   */
+  _darknessResponse() {
+    const fx = this.config.darknessEffects;
+    const dk = this.config.darkness ?? 0;
+    const m = (key) => {
+      const v = fx?.[key];
+      if (!Array.isArray(v)) return 1;
+      return Math.max(0, v[0] + (v[1] - v[0]) * dk);
+    };
+    return { rate: m("rate"), count: m("count"), scale: m("scale"), life: m("life"), alpha: m("alpha") };
   }
 
   /**
@@ -258,15 +295,27 @@ export class EmberParticleSystem {
 
     // Courant d'air de cet instant : il pousse les particules et change le comportement de l'effet
     const gustFactor = this._gustFactor();
-    const react = this._windResponse(gustFactor);
+    const windReact = this._windResponse(gustFactor);
+    const dark = this._darknessResponse();
+    // Réaction totale : vent × obscurité. La lumière liée ne suit que le vent (pas l'obscurité).
+    const react = {
+      air: windReact.air,
+      rate: windReact.rate * dark.rate,
+      count: windReact.count * dark.count,
+      scale: windReact.scale * dark.scale,
+      life: windReact.life * dark.life,
+      alpha: windReact.alpha * dark.alpha,
+      lift: windReact.lift
+    };
     this._react = react;
+    this._dark = dark;
     this._updateFlame(react.air, ms);
 
     // Vacillement : toute la flamme baisse d'un coup, au hasard, quand elle est près de s'éteindre
     const f = this._flicker;
     const flickerAlpha = f ? 1 - 0.55 * f * this.random() : 1;
     const flickerScale = f ? 1 - 0.25 * f * this.random() : 1;
-    this._updateLight(react, flickerAlpha, ms);
+    this._updateLight(windReact, flickerAlpha, ms);
 
     // Apparitions (une flamme soufflée ne produit plus rien)
     if (!this._stopped && this.lit) {
@@ -291,6 +340,10 @@ export class EmberParticleSystem {
     const drift = cfg.drift?.enabled ? (cfg.drift.intensity ?? 0) * DRIFT_ACCEL * (cfg.gridScale ?? 1) : 0;
     const align = !!cfg.rotation?.alignVelocity;
     const { x: cx, y: cy } = this.center;
+    const bounds = cfg.bounds ?? null;
+    const disturb = cfg.disturb ?? null;
+    const disturbers = disturb && this.getDisturbers ? this.getDisturbers() : null;
+    const hasDisturbers = !!disturbers?.length;
 
     // Mise à jour (parcours à l'envers pour recycler sans décaler les index)
     for (let i = this.particles.length - 1; i >= 0; i--) {
@@ -301,6 +354,12 @@ export class EmberParticleSystem {
         continue;
       }
       const t = p.age / p.life;
+
+      const ox = p.x;
+      const oy = p.y;
+
+      // Tokens qui passent : répulsion, sillage, envol
+      if (hasDisturbers) this._applyDisturbers(p, disturbers, disturb, dt);
 
       // Plan de la carte
       p.vx = (p.vx + gx * dt) * damping;
@@ -321,6 +380,14 @@ export class EmberParticleSystem {
         const dy = p.y - cy;
         p.x = cx + dx * cos - dy * sin;
         p.y = cy + dx * sin + dy * cos;
+      }
+
+      // Murs : la particule s'arrête contre le mur et rebondit un peu
+      if (bounds && !bounds.contains(p.x, p.y)) {
+        p.x = ox;
+        p.y = oy;
+        p.vx *= -0.3;
+        p.vy *= -0.3;
       }
 
       // Hauteur
@@ -373,8 +440,17 @@ export class EmberParticleSystem {
     }
     if (cfg.blend !== undefined) p.blendMode = cfg.blend;
 
-    // Position et élan dans le plan
-    const { x, y } = this._samplePosition();
+    // Position et élan dans le plan (pas d'apparition de l'autre côté d'un mur)
+    let { x, y } = this._samplePosition();
+    const bounds = cfg.bounds;
+    if (bounds && !bounds.contains(x, y)) {
+      let ok = false;
+      for (let i = 0; i < 4 && !ok; i++) {
+        ({ x, y } = this._samplePosition());
+        ok = bounds.contains(x, y);
+      }
+      if (!ok) ({ x, y } = this.center);
+    }
     const { x: cx, y: cy } = this.center;
     p.x = x;
     p.y = y;
@@ -416,6 +492,41 @@ export class EmberParticleSystem {
 
     this.particles.push(p);
     return p;
+  }
+
+  /** Effet des tokens proches sur une particule. */
+  _applyDisturbers(p, disturbers, d, dt) {
+    for (const t of disturbers) {
+      const dx = p.x - t.x;
+      const dy = p.y - t.y;
+      const r = t.r * (d.radius ?? 1);
+      const d2 = dx * dx + dy * dy;
+      if (d2 >= r * r) continue;
+      const dist = Math.sqrt(d2) || 0.001;
+      const f = 1 - dist / r;
+      if (d.push) {
+        p.vx += (dx / dist) * d.push * f * dt;
+        p.vy += (dy / dist) * d.push * f * dt;
+      }
+      if (d.wake) {
+        p.vx += t.vx * d.wake * f * dt * 3;
+        p.vy += t.vy * d.wake * f * dt * 3;
+      }
+      if (d.lift) {
+        const speed = Math.hypot(t.vx, t.vy);
+        if (speed > 20) {
+          const kick = d.lift * f * Math.min(1, speed / 150);
+          if (p.grounded) {
+            // Une feuille au sol est soulevée et reprend sa vie
+            p.grounded = false;
+            p.vz = kick;
+            p.life = Math.max(p.life, p.age + 1500);
+          } else {
+            p.vz += kick * dt * 4;
+          }
+        }
+      }
+    }
   }
 
   _recycle(index) {

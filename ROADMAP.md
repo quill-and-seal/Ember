@@ -10,12 +10,13 @@ Chaque idée a son issue sur GitHub, avec ses détails et ses points à trancher
 - [x] Vent de scène qui déplace les effets et change leur comportement (va0.1.0)
 - [x] Flammes fragiles soufflées par le vent, bougie (va0.1.0)
 - [x] Lumière adaptative, créée par Ember ou liée à une lumière de la scène (va0.1.0)
+- [x] Moteur Ember par défaut dans la version stable, réactions au monde : murs, tokens, obscurité (0.2.0)
 
 ## Prioritaires
 
 - [ ] [#1 Durée de combustion en temps de jeu](https://github.com/quill-and-seal/Ember/issues/1)
 - [ ] [#2 Particules d'états sur les tokens](https://github.com/quill-and-seal/Ember/issues/2) (étape 2)
-- [ ] [#6 Les murs bloquent les particules](https://github.com/quill-and-seal/Ember/issues/6)
+- [x] [#6 Les murs bloquent les particules](https://github.com/quill-and-seal/Ember/issues/6)
 - [ ] [#10 Son d'ambiance lié aux effets (flammes, vent…)](https://github.com/quill-and-seal/Ember/issues/10)
 
 ## Jeu
@@ -26,8 +27,8 @@ Chaque idée a son issue sur GitHub, avec ses détails et ses points à trancher
 
 ## Carte
 
-- [ ] [#7 Les tokens dérangent les effets](https://github.com/quill-and-seal/Ember/issues/7)
-- [ ] [#8 Réaction à l'obscurité de la scène](https://github.com/quill-and-seal/Ember/issues/8)
+- [x] [#7 Les tokens dérangent les effets](https://github.com/quill-and-seal/Ember/issues/7)
+- [x] [#8 Réaction à l'obscurité de la scène](https://github.com/quill-and-seal/Ember/issues/8)
 - [ ] [#9 La pluie éteint les feux](https://github.com/quill-and-seal/Ember/issues/9) (dépend de #11)
 
 ## Météo

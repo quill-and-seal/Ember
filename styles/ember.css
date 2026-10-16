@@ -174,3 +174,8 @@
 @media (prefers-reduced-motion: reduce) {
   .ember-wind .ember-compass-arrow { transition: none; }
 }
+
+/* Avertissement du moteur dans les réglages */
+.ember-engine-note {
+  color: #d9822b;
+}

@@ -61,8 +61,8 @@
     "Settings": {
       "Engine": {
         "Name": "Moteur de rendu",
-        "Hint": "Moteur Ember : le moteur maison du module, avec gravité. Foundry : le générateur de particules intégré à Foundry v14 (expérimental). Le changement s'applique à tous les joueurs.",
-        "Ember": "Ember (maison)",
+        "Hint": "Ember (recommandé) : le moteur du module, avec hauteur, vent, extinction, lumière adaptative et réactions au monde. Foundry : le générateur intégré à Foundry v14, expérimental et limité. S'applique à tous les joueurs.",
+        "Ember": "Ember (recommandé)",
         "Core": "Foundry (intégré, expérimental)"
       },
       "Performance": {
@@ -123,6 +123,34 @@
       "Scale": "Portée",
       "Follows": "La lumière suit la flamme : éteinte quand elle est soufflée, plus forte quand le vent l'attise, en creux quand elle vacille.",
       "EmberOnly": "La lumière adaptative ne fonctionne qu'avec le moteur Ember (réglages du module)."
+    },
+    "Engine": {
+      "ActiveWarning": "Ember utilise le générateur de particules de Foundry : la hauteur, le vent en direct, l'extinction des flammes, la lumière adaptative et les réactions au monde sont désactivés. Repasse sur le moteur Ember dans les réglages du module.",
+      "Note": "Le générateur de Foundry est expérimental et ne gère qu'une partie des effets d'Ember.",
+      "WarnTitle": "Passer au générateur de Foundry ?",
+      "WarnIntro": "Le générateur de particules intégré à Foundry v14 est expérimental. Avec lui, les émetteurs perdent :",
+      "Lose": {
+        "Height": "la hauteur et la perspective (montée, retombée, vue du dessus)",
+        "Wind": "le vent en direct, les rafales et les réactions au vent (seulement figées à la création)",
+        "Blowout": "le vacillement, l'extinction et le rallumage des flammes",
+        "Light": "la lumière adaptative",
+        "World": "les réactions au monde : murs, tokens et obscurité"
+      },
+      "WarnOutro": "Le changement s'applique à tous les joueurs. Tu peux revenir au moteur Ember à tout moment.",
+      "WarnYes": "Utiliser le générateur de Foundry",
+      "WarnNo": "Garder le moteur Ember"
+    },
+    "World": {
+      "Title": "Réactions au monde",
+      "Walls": "Arrêté par les murs",
+      "WallsHint": "Les particules restent dans la pièce et ne sortent que par les portes ouvertes.",
+      "WallsMagic": "Cet effet est magique : il traverse les murs.",
+      "Tokens": "Dérangé par les tokens",
+      "TokensHint": "Les tokens visibles qui passent repoussent les particules et laissent un sillage.",
+      "Darkness": "Réagit à l'obscurité",
+      "DarknessHint": "L'effet change d'aspect selon l'obscurité de la scène.",
+      "DarknessNight": "N'apparaît que dans l'obscurité : invisible sur une scène en plein jour. Décoche pour l'afficher à toute heure.",
+      "EmberOnly": "Les réactions au monde ne fonctionnent qu'avec le moteur Ember."
     }
   }
 }
